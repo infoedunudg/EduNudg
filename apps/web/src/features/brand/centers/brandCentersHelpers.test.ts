@@ -97,17 +97,28 @@ describe("brandCentersHelpers", () => {
         id: "c2",
         slug: "jayanagar",
         name: "Jayanagar, South",
-        display_name: null,
+        country: null,
         status: "suspended",
         contact_phone: "+91 90000 11111",
       },
     ]);
     expect(csv.startsWith("\uFEFF")).toBe(true);
-    expect(csv).toContain("center_slug,name,display_name");
+    expect(csv).toContain("center_slug,name,proposed_franchise_name");
+    expect(csv).toContain(",state,");
+    expect(csv).toContain("curriculum_assignment");
+    expect(csv).toContain("mobile_number");
+    expect(csv).not.toContain("display_name");
+    expect(csv).not.toContain("contact_phone");
+    expect(csv).not.toContain("short_description");
+    expect(csv).not.toContain(",region,");
     expect(csv).toContain("koramangala,Koramangala 4th Block,Abacus Koramangala");
+    expect(csv).toContain(",IN,");
     expect(csv).toContain('"Jayanagar, South"');
     expect(csv).toContain("jayanagar");
     expect(csv).toContain(",suspended");
+    expect(
+      brandCentersToCsv([sample], new Map([[sample.id, ["Abacus Core"]]]))
+    ).toContain("Abacus Core");
   });
 
   it("regression_brand_centers_csv_filename_uses_brand_slug", () => {

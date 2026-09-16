@@ -185,9 +185,9 @@ pnpm test:rls
 - Brand owners edit the center enrollment template at `{brand}.localhost:9000/app/center-site`
 - Public SEO is automatic (`derivePublicSeo`): no extra editor fields. Vercel serves `/robots.txt`, `/sitemap.xml`, `/llms.txt` via `/api/public-seo` and injects head tags through `/api/seo-document` on indexable paths only. `/login` rewrites to `/index.html` (never the SEO function). Preview hosts (`*-git-*.vercel.app` or `VERCEL_ENV=preview`) are `noindex`.
 
-## Franchise center CSV import
+## Franchise center CSV / Excel import
 
-Bulk-onboard centers from platform brand detail or brand Franchise Management — see [franchise-center-csv-import](./franchise-center-csv-import.md).
+Bulk-onboard centers from platform brand detail or brand Franchise Management (CSV, `.xlsx`, or `.xls`) — see [franchise-center-csv-import](./franchise-center-csv-import.md).
 
 ## Center student CSV import
 

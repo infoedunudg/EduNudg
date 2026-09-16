@@ -1,5 +1,11 @@
 import type { CenterStatusTone } from "@edunudg/ui";
 import type { BrandCenterRow, CenterStatus } from "@/lib/centerCentersApi";
+import {
+  DEFAULT_FRANCHISE_IMPORT_COUNTRY,
+  FRANCHISE_SPREADSHEET_CURRICULUM_SHEET,
+  FRANCHISE_SPREADSHEET_DATA_SHEET,
+  formatCurriculumAssignment,
+} from "@/lib/franchiseCenterImportHelpers";
 import { downloadTextFile } from "@/lib/platformDataExportHelpers";
 import { initialsFromName } from "@/lib/welcomeMessage";
 
@@ -96,14 +102,14 @@ export function programCurriculumSubtitle(ageLabel?: string | null, description?
 export const BRAND_CENTERS_CSV_HEADERS = [
   "center_slug",
   "name",
-  "display_name",
+  "proposed_franchise_name",
   "city",
-  "region",
+  "state",
   "country",
   "address",
   "pincode",
-  "contact_phone",
-  "short_description",
+  "mobile_number",
+  "curriculum_assignment",
   "status",
 ] as const;
 
@@ -115,7 +121,10 @@ function escapeCsvCell(value: string | number | null | undefined): string {
 }
 
 /** UTF-8 BOM CSV of every live franchise (not the current search/filter). Soft-deleted centers are omitted. */
-export function brandCentersToCsv(centers: BrandCenterRow[]): string {
+export function brandCentersToCsv(
+  centers: BrandCenterRow[],
+  assignments: Map<string, string[]> = new Map()
+): string {
   const lines = [
     BRAND_CENTERS_CSV_HEADERS.join(","),
     ...centers.map((center) =>
@@ -125,11 +134,11 @@ export function brandCentersToCsv(centers: BrandCenterRow[]): string {
         center.display_name,
         center.city,
         center.region,
-        center.country,
+        center.country?.trim() || DEFAULT_FRANCHISE_IMPORT_COUNTRY,
         center.address_line1,
         center.pincode,
         center.contact_phone,
-        center.short_description,
+        formatCurriculumAssignment(assignments.get(center.id) ?? []),
         center.status,
       ]
         .map(escapeCsvCell)
@@ -139,11 +148,74 @@ export function brandCentersToCsv(centers: BrandCenterRow[]): string {
   return `\uFEFF${lines.join("\n")}`;
 }
 
-export function brandCentersCsvFilename(brandSlug: string, now = new Date()): string {
-  const slug = brandSlug.trim() || "brand";
-  return `${slug}-franchises-${now.toISOString().slice(0, 10)}.csv`;
+export function brandCentersExportAoa(
+  centers: BrandCenterRow[],
+  assignments: Map<string, string[]> = new Map()
+): string[][] {
+  return [
+    [...BRAND_CENTERS_CSV_HEADERS],
+    ...centers.map((center) => [
+      center.slug,
+      center.name,
+      center.display_name ?? "",
+      center.city ?? "",
+      center.region ?? "",
+      center.country?.trim() || DEFAULT_FRANCHISE_IMPORT_COUNTRY,
+      center.address_line1 ?? "",
+      center.pincode ?? "",
+      center.contact_phone ?? "",
+      formatCurriculumAssignment(assignments.get(center.id) ?? []),
+      center.status,
+    ]),
+  ];
 }
 
-export function downloadBrandCentersCsv(centers: BrandCenterRow[], brandSlug: string, now = new Date()): void {
-  downloadTextFile(brandCentersToCsv(centers), brandCentersCsvFilename(brandSlug, now), "text/csv;charset=utf-8");
+export function brandCentersCsvFilename(brandSlug: string, now = new Date(), ext: "csv" | "xlsx" = "csv"): string {
+  const slug = brandSlug.trim() || "brand";
+  return `${slug}-franchises-${now.toISOString().slice(0, 10)}.${ext}`;
+}
+
+export function downloadBrandCentersCsv(
+  centers: BrandCenterRow[],
+  brandSlug: string,
+  now = new Date(),
+  assignments: Map<string, string[]> = new Map()
+): void {
+  downloadTextFile(
+    brandCentersToCsv(centers, assignments),
+    brandCentersCsvFilename(brandSlug, now, "csv"),
+    "text/csv;charset=utf-8"
+  );
+}
+
+export async function downloadBrandCentersExport(
+  centers: BrandCenterRow[],
+  brandSlug: string,
+  options: { programNames?: string[]; assignments?: Map<string, string[]> } = {},
+  now = new Date()
+): Promise<void> {
+  const XLSX = await import("xlsx");
+  const programNames = options.programNames ?? [];
+  const assignments = options.assignments ?? new Map<string, string[]>();
+  const workbook = XLSX.utils.book_new();
+  const dataSheet = XLSX.utils.aoa_to_sheet(brandCentersExportAoa(centers, assignments));
+  const curriculumColIndex = BRAND_CENTERS_CSV_HEADERS.indexOf("curriculum_assignment");
+  const col = String.fromCharCode(65 + curriculumColIndex);
+  const lastRow = Math.max(centers.length + 1, 500);
+  if (programNames.length > 0) {
+    (dataSheet as Record<string, unknown>)["!dataValidations"] = [
+      {
+        sqref: `${col}2:${col}${lastRow}`,
+        type: "list",
+        allowBlank: true,
+        formula1: `${FRANCHISE_SPREADSHEET_CURRICULUM_SHEET}!$A$1:$A$${programNames.length}`,
+      },
+    ];
+  }
+  XLSX.utils.book_append_sheet(workbook, dataSheet, FRANCHISE_SPREADSHEET_DATA_SHEET);
+  const curriculumSheet = XLSX.utils.aoa_to_sheet(
+    programNames.length > 0 ? programNames.map((name) => [name]) : [["No published curriculum yet"]]
+  );
+  XLSX.utils.book_append_sheet(workbook, curriculumSheet, FRANCHISE_SPREADSHEET_CURRICULUM_SHEET);
+  XLSX.writeFile(workbook, brandCentersCsvFilename(brandSlug, now, "xlsx"));
 }

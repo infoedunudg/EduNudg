@@ -36,9 +36,9 @@ Authoritative docs for franchise/student journey v1. Plan: [franchise_student_jo
 | [center-fees-workspace](../../openspec/specs/center-fees-workspace/spec.md) | Center `/app/fees` pipeline chrome (Outstanding / Paid / Overdue / Total) |
 | [center-inventory-workspace](../../openspec/specs/center-inventory-workspace/spec.md) | Center `/app/inventory` pipeline chrome; stock limited to SKUs tied to assigned curriculum |
 | [franchise-applications](../../openspec/specs/franchise-applications/spec.md) | Franchise apply + approve provision |
-| [franchise-center-management](../../openspec/specs/franchise-center-management/spec.md) | Brand `/app/centers` workspace (Import / Export Franchise) |
+| [franchise-center-management](../../openspec/specs/franchise-center-management/spec.md) | Brand `/app/centers` workspace (Import / Export Franchise; Delete franchise popup) |
 | [brand-students-workspace](../../openspec/specs/brand-students-workspace/spec.md) | Brand `/app/students` all-franchise roster (contact + curriculum levels; Export CSV) |
-| [franchise-center-csv-import](../../openspec/specs/franchise-center-csv-import/spec.md) | Platform and brand CSV bulk center import |
+| [franchise-center-csv-import](../../openspec/specs/franchise-center-csv-import/spec.md) | Platform and brand CSV/Excel bulk center import |
 | [brand-curriculum-workspace](../../openspec/specs/brand-curriculum-workspace/spec.md) | Brand `/app/curriculum` courses/levels/units; on/off toggle; mobile **Edit course** overlay matches desktop controls; parent marketing stays editable after create; Spark public courses use published syllabus |
 | [brand-batches-feature-flag](../../openspec/specs/brand-batches-feature-flag/spec.md) | Per-brand Batches module gate |
 | [brand-dashboard](../../openspec/specs/brand-dashboard/spec.md) | Brand `/app` Today at a glance; Center Health is six equal checks (curriculum / feedback / students / franchises / homepage / franchise site) |

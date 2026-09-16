@@ -97,6 +97,12 @@ describe("CenterDetailPanel franchise login credentials", () => {
   const originalLocation = window.location;
 
   beforeEach(() => {
+    HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
+      this.open = true;
+    });
+    HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
+      this.open = false;
+    });
     updateFranchiseCenter.mockClear();
     setFranchiseCenterStatus.mockClear();
     softDeleteFranchiseCenter.mockClear();
@@ -184,7 +190,7 @@ describe("CenterDetailPanel franchise login credentials", () => {
     );
     await screen.findByLabelText("Login email");
 
-    fireEvent.change(screen.getByLabelText("Franchise Name"), {
+    fireEvent.change(screen.getByLabelText("Franchise Owner"), {
       target: { value: "Arti Drawing Updated" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
@@ -275,6 +281,8 @@ describe("CenterDetailPanel franchise login credentials", () => {
       </QueryClientProvider>
     );
     fireEvent.click(await screen.findByRole("button", { name: "Delete franchise" }));
+    expect(await screen.findByRole("dialog")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Delete franchise" })).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
     await waitFor(() =>
       expect(softDeleteFranchiseCenter).toHaveBeenCalledWith("center-arti", "")

@@ -51,6 +51,33 @@ export async function fetchBrandProgramsWithLevels(brandId: string): Promise<Bra
   });
 }
 
+export async function fetchCenterProgramNamesByCenterIds(
+  centerIds: string[]
+): Promise<Map<string, string[]>> {
+  const assigned = new Map<string, string[]>();
+  if (centerIds.length === 0) return assigned;
+
+  const { data, error } = await getSupabase()
+    .from("center_program_enablement")
+    .select("center_id, programs(name)")
+    .in("center_id", centerIds);
+  const rows = supabaseList(data, error) as {
+    center_id: string;
+    programs: { name: string } | { name: string }[] | null;
+  }[];
+
+  for (const row of rows) {
+    const program = Array.isArray(row.programs) ? row.programs[0] : row.programs;
+    const name = program?.name?.trim();
+    if (!name) continue;
+    const current = assigned.get(row.center_id) ?? [];
+    if (!current.includes(name)) current.push(name);
+    assigned.set(row.center_id, current);
+  }
+
+  return assigned;
+}
+
 export async function fetchCenterAuthorizedPrograms(centerId: string): Promise<CenterProgramAuth[]> {
   const { data, error } = await getSupabase()
     .from("center_program_enablement")

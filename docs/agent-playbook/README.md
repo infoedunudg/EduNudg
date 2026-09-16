@@ -22,7 +22,7 @@ Instructions for humans and AI agents working on EduNudg.
 ## Operations
 
 - [Runbook](../ops/runbook.md) — local URLs (port 9000), git + Cursor push gates
-- [Franchise center CSV import](../ops/franchise-center-csv-import.md)
+- [Franchise center CSV / Excel import](../ops/franchise-center-csv-import.md)
 - [Platform admin portal handoff](../ops/platform-admin-portal-handoff.md) — cross-host support login
 - [Test users](../ops/test-users.md) — seeded accounts and troubleshooting
 

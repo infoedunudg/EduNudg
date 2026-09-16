@@ -1,11 +1,19 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
 import { FranchiseCenterImportDialog } from "./FranchiseCenterImportDialog";
 
 const importFranchiseCentersMock = vi.fn();
+const syncCenterProgramEnablementMock = vi.fn();
 
 vi.mock("@/lib/franchiseCenterImportApi", () => ({
   importFranchiseCenters: (...args: unknown[]) => importFranchiseCentersMock(...args),
+}));
+
+vi.mock("@/lib/centerProgramApi", () => ({
+  fetchBrandPrograms: vi.fn().mockResolvedValue([{ id: "p1", name: "Abacus Core" }]),
+  syncCenterProgramEnablement: (...args: unknown[]) => syncCenterProgramEnablementMock(...args),
 }));
 
 function polyfillDialog() {
@@ -17,12 +25,19 @@ function polyfillDialog() {
   });
 }
 
+function renderDialog(ui: ReactElement) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+}
+
 describe("FranchiseCenterImportDialog", () => {
   beforeEach(() => {
     polyfillDialog();
     importFranchiseCentersMock.mockReset();
+    syncCenterProgramEnablementMock.mockReset();
+    syncCenterProgramEnablementMock.mockResolvedValue(undefined);
     importFranchiseCentersMock.mockResolvedValue({
-      result: { created: [{ row: 2, center_id: "c1", slug: "andheri-west" }], errors: [] },
+      result: { created: [{ row: 1, center_id: "c1", slug: "andheri-west" }], errors: [] },
       error: null,
     });
   });
@@ -32,7 +47,7 @@ describe("FranchiseCenterImportDialog", () => {
   });
 
   it("shows template actions when open", () => {
-    render(
+    renderDialog(
       <FranchiseCenterImportDialog
         brandId="b1"
         brandSlug="abacusworld"
@@ -48,12 +63,20 @@ describe("FranchiseCenterImportDialog", () => {
     expect(screen.getByText("Download the format")).toBeDefined();
     expect(screen.getByText("Add your data")).toBeDefined();
     expect(screen.getByText("Upload franchise data")).toBeDefined();
+    expect(screen.getByText(/Owner Name/)).toBeDefined();
+    expect(screen.getByText(/proposed_franchise_name/)).toBeDefined();
+    expect(screen.getByText(/mobile_number/)).toBeDefined();
+    expect(screen.getByText(/Reimporting the same Franchise Owner name/)).toBeDefined();
+    expect(screen.queryByText(/short_description/)).toBeNull();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input.accept).toMatch(/\.xlsx/);
+    expect(input.accept).toMatch(/\.xls/);
   });
 
   it("previews valid CSV, imports ready rows, and auto-closes on success", async () => {
     const onImported = vi.fn();
     const onClose = vi.fn();
-    render(
+    renderDialog(
       <FranchiseCenterImportDialog
         brandId="b1"
         brandSlug="abacusworld"
@@ -88,7 +111,7 @@ Andheri West,Mumbai`;
   });
 
   it("regression_rejects_malicious_csv_extension", async () => {
-    render(
+    renderDialog(
       <FranchiseCenterImportDialog
         brandId="b1"
         brandSlug="abacusworld"
@@ -103,8 +126,84 @@ Andheri West,Mumbai`;
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(screen.getByRole("alert").textContent).toMatch(/Only \.csv/);
+      expect(screen.getByRole("alert").textContent).toMatch(/Only \.csv, \.xlsx, or \.xls/);
     });
     expect(importFranchiseCentersMock).not.toHaveBeenCalled();
+  });
+
+  it("regression_franchise_import_shows_server_row_errors", async () => {
+    importFranchiseCentersMock.mockResolvedValue({
+      result: {
+        created: [],
+        errors: [
+          {
+            row: 1,
+            message: 'duplicate key value violates unique constraint "domain_mappings_hostname_key"',
+          },
+        ],
+      },
+      error: null,
+    });
+
+    renderDialog(
+      <FranchiseCenterImportDialog
+        brandId="b1"
+        brandSlug="abacusworld"
+        open
+        onClose={() => undefined}
+        onImported={() => undefined}
+      />
+    );
+
+    const csv = `name,city
+Andheri West,Mumbai`;
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File([csv], "centers.csv", { type: "text/csv" })] } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Import 1 center" })).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Import 1 center" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toMatch(/1 row failed on the server/i);
+    expect(alert.textContent).toMatch(/Spreadsheet row 2/i);
+    expect(alert.textContent).toMatch(/center website URL/i);
+    expect(screen.getByRole("button", { name: "Import 0 centers" })).toHaveProperty("disabled", true);
+  });
+
+  it("regression_franchise_import_accepts_xlsx", async () => {
+    const XLSX = await import("xlsx");
+    const sheet = XLSX.utils.aoa_to_sheet([
+      ["name", "city"],
+      ["Andheri West", "Mumbai"],
+    ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "Centers");
+    const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const buffer = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes as ArrayBuffer);
+
+    renderDialog(
+      <FranchiseCenterImportDialog
+        brandId="b1"
+        brandSlug="abacusworld"
+        open
+        onClose={() => undefined}
+        onImported={() => undefined}
+      />
+    );
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File([buffer as BlobPart], "centers.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("1 ready")).toBeDefined();
+    });
+    expect(screen.getByText("Andheri West")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Import 1 center" })).toBeDefined();
   });
 });

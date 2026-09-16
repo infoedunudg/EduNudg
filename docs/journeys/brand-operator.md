@@ -9,7 +9,7 @@ Brand staff use `http://{brand}.localhost:9000/app/*`.
 | Home | Compact KPI grid: unassigned leads, stale leads, new franchise applications |
 | **Student Leads** | Assign, reallocate, view lost with reasons |
 | **Franchise Applications** | Approve/reject; Add Franchise modal; provisions center + domain |
-| Franchise Centers | Master-detail `/app/centers` — profile (no Social Media), open frontend/backend, disable/enable, delete, curriculum, **Import Franchise** CSV, **Export Franchise** |
+| Franchise Centers | Master-detail `/app/centers` — profile (no Social Media), open frontend/backend, disable/enable, delete, curriculum, **Import Franchise** CSV/Excel, **Export Franchise** |
 | **Students** | Master-detail `/app/students` — same chrome as Franchise Management; search by student, franchise, or city; read-only contact + curriculum levels; **Export CSV** downloads the full roster |
 | Curriculum | Master-detail `/app/curriculum` — pipeline header + Active/Drafts/Programs/Total KPIs; courses/levels/units; on/off toggle in course detail header (mobile **Edit course** overlay includes the same controls); parent marketing stays editable after create |
 | Merchandise | Catalog, promos, payment settings, and franchise orders — pipeline header + Active/Draft/Orders/Total KPIs; each tab is list + detail |
@@ -27,10 +27,10 @@ Brand staff use `http://{brand}.localhost:9000/app/*`.
 ## Franchise operations
 
 - Approve inquiry → center host live + operator invite (same transaction).
-- **Import Franchise** CSV on `/app/centers` — same template and `import_franchise_centers` RPC as platform admins ([ops](../ops/franchise-center-csv-import.md)).
+- **Import Franchise** CSV/Excel on `/app/centers` — same template and `import_franchise_centers` RPC as platform admins ([ops](../ops/franchise-center-csv-import.md)). Reimporting the same Franchise Owner **name** overwrites that franchise and reactivates it if it was deleted.
 - **Export Franchise** downloads every live franchise (`{brandSlug}-franchises-{date}.csv`) even when the directory is filtered.
 - Open that franchise’s **Frontend** (public site) and **Backend** (`/app`) from the franchise detail panel (**View Frontend** / **View Backend**).
-- **Disable / Enable** franchise (`suspended` ↔ `active`). **Delete** is a soft-delete (`deleted_at`). Approved Franchise Applications stay as history on **Decided** with a DELETED badge (sorted after live decided rows).
+- **Disable / Enable** franchise (`suspended` ↔ `active`). **Delete franchise** opens a confirmation popup, then soft-deletes (`deleted_at`). Approved Franchise Applications stay as history on **Decided** with a DELETED badge (sorted after live decided rows).
 - Read-only visibility into any student/center under brand from **Students** (`/app/students`) — contact details and current curriculum levels for growth planning. **Export CSV** in the page header downloads the full roster (`{brandSlug}-students-{date}.csv`).
 
 ## Billing

@@ -14,5 +14,16 @@ BEGIN
     RAISE EXCEPTION 'Missing is_import_email';
   END IF;
 
+  IF (
+    SELECT pg_get_functiondef(p.oid)
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'import_franchise_centers'
+    ORDER BY p.oid DESC
+    LIMIT 1
+  ) NOT ILIKE '%deleted_at = NULL%' THEN
+    RAISE EXCEPTION 'import_franchise_centers must restore matching soft-deleted franchises';
+  END IF;
+
   RAISE NOTICE 'RLS franchise center import smoke test passed';
 END $$;

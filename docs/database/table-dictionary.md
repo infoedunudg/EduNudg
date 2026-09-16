@@ -24,7 +24,7 @@ All mutable business tables: `created_at`, `updated_at`, `created_by`, `updated_
 |-------|-------|-------------|
 | `profiles` | user | Extended auth user profile |
 | `brands` | platform | Franchise brand tenant |
-| `franchise_centers` | brand | Physical center / franchise; public profile fields below. CSV import sets `slug` from **name** (unique `-2` suffix if needed). |
+| `franchise_centers` | brand | Physical center / franchise; public profile fields below. CSV import sets `slug` from **name** (unique `-2` suffix if needed). Reimport of the same `name` overwrites that row (including soft-deleted) and sets `status` `active` (`102`). |
 | `memberships` | auth | User role per scope. Inquiry/CSV franchise owners start as `invited`; first staff login calls `accept_own_invited_memberships()` (migration `101`) so they are not signed out immediately. |
 | `auth_audit_logs` | auth | Append-only sign-in events (`login_success`, `login_failure`, `logout`, `access_denied`) with `portal`, optional `brand_id`/`center_id`, session dedup. Platform `/admin/audit` Auth stream. Full IP is platform-only. Tenant staff read via `list_tenant_staff_audit` (failed-login emails and raw IP redacted). |
 | `access_audit_logs` | audit | Sensitive actions: CSV export, Copy Profile URL, owner credentials, platform portal handoff. Platform SELECT; tenant via `list_tenant_staff_audit`. |
@@ -51,7 +51,7 @@ Center staff update via RPC `update_center_public_profile_rpc` (requires `has_ce
 | `center_status_events` | brand | Append-only audit when brand suspends/re-enables a franchise |
 | `center_curriculum_enablement` | brand | Published `curriculum_version_id` pins per center; sync via `sync_center_curriculum_enablement` |
 
-RPC `set_franchise_center_status` — brand-only `active` ↔ `suspended` (Disable/Enable in Brand Backend). RPC `soft_delete_franchise_center` — brand/platform sets `deleted_at` and `closed`. Center staff access gated via `user_center_ids()` (operational centers only).
+RPC `set_franchise_center_status` — brand-only `active` ↔ `suspended` (Disable/Enable in Brand Backend). RPC `soft_delete_franchise_center` — brand/platform sets `deleted_at` and `closed`. RPC `import_franchise_centers` — create or overwrite by slug from **name**; soft-deleted matches are restored (`deleted_at` cleared, `active`). Center staff access gated via `user_center_ids()` (operational centers only).
 
 ## Leads & recruitment
 

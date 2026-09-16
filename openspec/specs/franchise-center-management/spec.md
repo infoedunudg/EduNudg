@@ -34,6 +34,8 @@ Brand staff SHALL edit franchise details except slug.
 - **WHEN** brand staff save profile changes
 - **THEN** `franchise_centers` fields update via authorized RPCs
 - **AND** slug is not modified
+- **AND** Franchise Identity labels **Franchise Owner** (`name`) and **Display Name** (`display_name`)
+- **AND** Location & Contact labels **State** for `region`
 
 ### Requirement: Franchise Management has no social media editor
 
@@ -70,18 +72,18 @@ Brand staff SHALL view and set the franchise center login email and password fro
 
 ### Requirement: Bulk CSV import
 
-Brand staff with `centers.create` SHALL bulk-onboard franchise centers from CSV on `/app/centers`, using the same flow as platform admins (`import_franchise_centers`).
+Brand staff with `centers.create` SHALL bulk-onboard franchise centers from CSV or Excel on `/app/centers`, using the same flow as platform admins (`import_franchise_centers`).
 
 #### Scenario: Import Franchise on franchise management
 
 - **GIVEN** brand owner or brand admin is on `/app/centers`
 - **WHEN** they click **Import Franchise** (primary header action)
-- **THEN** the franchise center CSV import dialog opens
+- **THEN** the franchise center CSV/Excel import dialog opens
 - **AND** created centers appear in the directory after a successful import
 
 See [`openspec/specs/franchise-center-csv-import/spec.md`](../franchise-center-csv-import/spec.md).
 
-### Requirement: Export franchise CSV
+### Requirement: Export franchise spreadsheet
 
 Brand staff SHALL download the full live franchise directory as UTF-8 CSV from `/app/centers`. Search and KPI filters SHALL NOT shrink the export. Soft-deleted centers SHALL NOT appear (they are already omitted from the directory query).
 
@@ -89,9 +91,12 @@ Brand staff SHALL download the full live franchise directory as UTF-8 CSV from `
 
 - **GIVEN** brand staff are on `/app/centers` with at least one franchise
 - **WHEN** they click **Export Franchise** in the top-right header (secondary, beside **Import Franchise**)
-- **THEN** the browser downloads a CSV named `{brandSlug}-franchises-{YYYY-MM-DD}.csv`
-- **AND** the file includes every live franchise (active and suspended), not only the filtered directory
-- **AND** columns include `center_slug`, import-aligned profile fields, and `status`
+- **THEN** the browser downloads an Excel workbook named `{brandSlug}-franchises-{YYYY-MM-DD}.xlsx`
+- **AND** the `Franchises` sheet includes every live franchise (active and suspended), not only the filtered directory
+- **AND** columns include `center_slug`, `name` (Franchise Owner), `proposed_franchise_name` (Display Name), `city`, `state`, `country`, `address`, `pincode`, `mobile_number`, `curriculum_assignment`, and `status`
+- **AND** `country` defaults to `IN` when the stored value is empty
+- **AND** a `Curriculum` sheet lists that brand’s course names for the `curriculum_assignment` dropdown
+- **AND** the file SHALL NOT include `short_description`
 
 ### Requirement: View franchise frontend and backend
 
@@ -126,10 +131,12 @@ Brand staff with `centers.delete` SHALL remove a franchise from Brand Backend vi
 
 #### Scenario: Confirm delete
 
-- **WHEN** brand staff confirm **Delete franchise**
-- **THEN** `franchise_centers.deleted_at` is set and status becomes `closed`
+- **WHEN** brand staff click **Delete franchise**
+- **THEN** a centered confirmation dialog opens (not an inline section below the fold)
+- **AND** when they confirm, `franchise_centers.deleted_at` is set and status becomes `closed`
 - **AND** the center disappears from `/app/centers` and public landing
 - **AND** student and lead rows are not hard-deleted
+- **AND** regression `regression_brand_centers_confirm_delete_calls_soft_delete_rpc` stays green
 
 ### Requirement: Version-level curriculum assignment
 

@@ -23,11 +23,12 @@ import {
   centerListTitle,
   centerLocationLine,
   centerStatusTone,
-  downloadBrandCentersCsv,
+  downloadBrandCentersExport,
   filterCenters,
   type CenterFilter,
 } from "@/features/brand/centers/brandCentersHelpers";
 import { centerMatchesSearch, fetchBrandCenters } from "@/lib/centerCentersApi";
+import { fetchBrandPrograms, fetchCenterProgramNamesByCenterIds } from "@/lib/centerProgramApi";
 import { useOpsBreakpoint } from "@/features/center/hooks/useOpsBreakpoint";
 import "./brandCenters.css";
 
@@ -174,14 +175,23 @@ export function CentersView() {
               variant="secondary"
               disabled={all.length === 0}
               onClick={() => {
-                void reportAccessAudit({
-                  action: "export",
-                  resourceType: "franchise_csv",
-                  tenant,
-                  path: "/app/centers",
-                  metadata: { rowCount: all.length },
-                });
-                downloadBrandCentersCsv(all, brandSlug);
+                void (async () => {
+                  void reportAccessAudit({
+                    action: "export",
+                    resourceType: "franchise_csv",
+                    tenant,
+                    path: "/app/centers",
+                    metadata: { rowCount: all.length },
+                  });
+                  const [programRows, assignments] = await Promise.all([
+                    fetchBrandPrograms(brandId),
+                    fetchCenterProgramNamesByCenterIds(all.map((center) => center.id)),
+                  ]);
+                  await downloadBrandCentersExport(all, brandSlug, {
+                    programNames: programRows.map((program) => program.name),
+                    assignments,
+                  });
+                })();
               }}
             >
               Export Franchise

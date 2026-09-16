@@ -48,6 +48,7 @@ import {
   centerStatusTone,
   programCurriculumSubtitle,
 } from "@/features/brand/centers/brandCentersHelpers";
+import "@/features/platform/brandDetailPage.css";
 
 type FormState = Omit<CenterPublicProfileInput, "socialLinks"> & { name: string };
 
@@ -92,6 +93,7 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
   const [credentialsLoaded, setCredentialsLoaded] = useState(false);
   const [loginFieldsTouched, setLoginFieldsTouched] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
+  const deleteDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const next = centerToForm(center);
@@ -128,6 +130,13 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
       cancelled = true;
     };
   }, [center.id]);
+
+  useEffect(() => {
+    const dialog = deleteDialogRef.current;
+    if (!dialog) return;
+    if (deleteMode && !dialog.open) dialog.showModal();
+    if (!deleteMode && dialog.open) dialog.close();
+  }, [deleteMode]);
 
   useEffect(() => {
     if (!error) return;
@@ -271,6 +280,12 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
     onSettled: () => setPendingProgramId(null),
   });
 
+  const closeDeleteDialog = () => {
+    if (removeFranchise.isPending) return;
+    setDeleteMode(false);
+    setDeleteReason("");
+  };
+
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -355,7 +370,7 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
           />
         ) : null}
         <FormGrid columns={isMobile ? 1 : 2}>
-          <Input label="Franchise Name" value={form.name} onChange={(v) => setField("name", v)} editable />
+          <Input label="Franchise Owner" value={form.name} onChange={(v) => setField("name", v)} editable />
           <Input
             label="Display Name"
             value={form.displayName}
@@ -416,7 +431,7 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
       <CentersSectionCard title="Location & Contact">
         <FormGrid columns={2}>
           <Input label="City" value={form.city} onChange={(v) => setField("city", v)} editable />
-          <Input label="Region" value={form.region} onChange={(v) => setField("region", v)} editable />
+          <Input label="State" value={form.region} onChange={(v) => setField("region", v)} editable />
           <Input label="Pincode" value={form.pincode} onChange={(v) => setField("pincode", v)} editable />
           <Input label="Country" value={form.country} onChange={(v) => setField("country", v)} editable />
         </FormGrid>
@@ -473,23 +488,42 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
         </CentersSectionCard>
       ) : null}
 
-      {deleteMode ? (
-        <CentersSectionCard title="Delete franchise">
-          <p className="ed-text-sm ed-muted">
-            This removes the franchise from Brand Backend and the public center site. Student and lead records are
-            kept. This cannot be undone from this screen.
-          </p>
-          <Input label="Reason (optional)" value={deleteReason} onChange={setDeleteReason} editable />
-          <div className="ed-brand-centers__inline-actions">
+      <dialog
+        ref={deleteDialogRef}
+        className="ed-import-dialog"
+        aria-labelledby="delete-franchise-title"
+        onClose={closeDeleteDialog}
+        onClick={(event) => event.target === deleteDialogRef.current && closeDeleteDialog()}
+      >
+        <div className="ed-import-dialog__panel" role="document">
+          <header className="ed-import-dialog__header">
+            <h2 id="delete-franchise-title">Delete franchise</h2>
+            <button
+              type="button"
+              className="ed-import-dialog__close"
+              aria-label="Close"
+              onClick={closeDeleteDialog}
+            >
+              ×
+            </button>
+          </header>
+          <div className="ed-import-dialog__body">
+            <p className="ed-import-dialog__intro">
+              This removes <strong>{title}</strong> from Brand Backend and the public center site. Student and
+              lead records are kept. This cannot be undone from this screen.
+            </p>
+            <Input label="Reason (optional)" value={deleteReason} onChange={setDeleteReason} editable />
+          </div>
+          <footer className="ed-import-dialog__footer">
+            <Button variant="ghost" onClick={closeDeleteDialog} disabled={removeFranchise.isPending}>
+              Cancel
+            </Button>
             <Button variant="danger" onClick={() => removeFranchise.mutate()} disabled={removeFranchise.isPending}>
               {removeFranchise.isPending ? "Deleting…" : "Confirm delete"}
             </Button>
-            <Button variant="ghost" onClick={() => setDeleteMode(false)}>
-              Cancel
-            </Button>
-          </div>
-        </CentersSectionCard>
-      ) : null}
+          </footer>
+        </div>
+      </dialog>
 
       {isMobile ? (
         <div className="ed-brand-centers__mobile-actions">

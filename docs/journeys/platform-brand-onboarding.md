@@ -24,7 +24,7 @@ flowchart LR
    - `memberships` **brand_owner** for signup email + Supabase auth invite
 5. **Brand owner** — logs in at `http://{slug}.localhost:9000/login` → `/app`.
 6. **Brand marketing** — franchise + student public forms available (no subscription gate on public forms).
-7. **Optional bulk centers** — platform admin or brand owner/admin may [import franchise centers from CSV](../ops/franchise-center-csv-import.md) (platform brand detail or brand `/app/centers`).
+7. **Optional bulk centers** — platform admin or brand owner/admin may [import franchise centers from CSV or Excel](../ops/franchise-center-csv-import.md) (platform brand detail or brand `/app/centers`).
 
 ## Admin alternative
 

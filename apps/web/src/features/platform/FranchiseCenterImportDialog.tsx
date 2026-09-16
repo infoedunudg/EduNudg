@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Button, MutationError } from "@edunudg/ui";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@edunudg/ui";
 import {
+  applyFranchiseCurriculumCatalog,
+  applyFranchiseImportRpcErrors,
   downloadFranchiseCenterImportTemplate,
-  parseFranchiseCenterImportCsv,
-  readImportCsvFile,
+  formatFranchiseImportFailureSummary,
+  FRANCHISE_CENTER_IMPORT_ACCEPT,
+  parseCurriculumAssignmentCell,
+  readFranchiseCenterImportFile,
+  resolveCurriculumProgramIds,
   toRpcRow,
   type FranchiseCenterImportPreview,
+  type FranchiseImportRowFailure,
 } from "@/lib/franchiseCenterImportHelpers";
 import { importFranchiseCenters } from "@/lib/franchiseCenterImportApi";
+import { fetchBrandPrograms, syncCenterProgramEnablement } from "@/lib/centerProgramApi";
 
 type Props = {
   brandId: string;
@@ -46,9 +54,10 @@ function ImportStep({
 
 function ImportPreviewTable({ preview }: { preview: FranchiseCenterImportPreview }) {
   if (preview.rows.length === 0) return null;
+  const hasRowErrors = preview.rows.some((row) => row.errors.length > 0);
 
   return (
-    <div className="ed-import-preview">
+    <div className={hasRowErrors ? "ed-import-preview ed-import-preview--has-errors" : "ed-import-preview"}>
       <table className="ed-import-preview__table">
         <thead>
           <tr>
@@ -84,7 +93,15 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [resultSummary, setResultSummary] = useState<string | null>(null);
+  const [rowFailures, setRowFailures] = useState<FranchiseImportRowFailure[]>([]);
   const [importSucceeded, setImportSucceeded] = useState(false);
+
+  const programs = useQuery({
+    queryKey: ["brand-programs-for-auth", brandId],
+    enabled: open && !!brandId,
+    queryFn: () => fetchBrandPrograms(brandId),
+  });
+  const programCatalog = programs.data ?? [];
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -100,6 +117,7 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
       setFileError(null);
       setSubmitError(null);
       setResultSummary(null);
+      setRowFailures([]);
       setImportSucceeded(false);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -117,24 +135,19 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
     setFileError(null);
     setSubmitError(null);
     setResultSummary(null);
+    setRowFailures([]);
 
     if (!file) return;
 
     setUploadedFileName(file.name);
 
-    const { text, error } = await readImportCsvFile(file);
-    if (error || !text) {
+    const { preview: parsed, error } = await readFranchiseCenterImportFile(file);
+    if (error || !parsed) {
       setFileError(error ?? "Could not read file.");
       return;
     }
 
-    const parsed = parseFranchiseCenterImportCsv(text);
-    if (parsed.fileError) {
-      setFileError(parsed.fileError);
-      return;
-    }
-
-    setPreview(parsed);
+    setPreview(applyFranchiseCurriculumCatalog(parsed, programCatalog));
   };
 
   const handleImport = async () => {
@@ -143,6 +156,7 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
     setSubmitting(true);
     setSubmitError(null);
     setResultSummary(null);
+    setRowFailures([]);
     setImportSucceeded(false);
 
     const { result, error } = await importFranchiseCenters(
@@ -150,29 +164,57 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
       preview.validRows.map((row) => toRpcRow(row))
     );
 
-    setSubmitting(false);
-
     if (error || !result) {
+      setSubmitting(false);
       setSubmitError(error ?? "Import failed.");
       return;
     }
 
+    for (const created of result.created) {
+      const source = preview.validRows[created.row - 1];
+      if (!source) continue;
+      const names = parseCurriculumAssignmentCell(source.curriculum_assignment);
+      const { ids } = resolveCurriculumProgramIds(names, programCatalog);
+      if (ids.length === 0) continue;
+      try {
+        await syncCenterProgramEnablement(created.center_id, ids);
+      } catch (assignErr) {
+        setSubmitting(false);
+        setSubmitError(
+          assignErr instanceof Error ? assignErr.message : "Centers imported, but curriculum assignment failed."
+        );
+        return;
+      }
+    }
+
+    setSubmitting(false);
+
     const createdCount = result.created.length;
     const errorCount = result.errors.length;
 
+    if (errorCount > 0) {
+      const applied = applyFranchiseImportRpcErrors(preview, result.errors);
+      setPreview(applied.preview);
+      setRowFailures(applied.failures);
+      setSubmitError(formatFranchiseImportFailureSummary(applied.failures));
+      if (createdCount > 0) {
+        setResultSummary(
+          `Imported ${createdCount} center${createdCount === 1 ? "" : "s"}. ${errorCount} row${errorCount === 1 ? "" : "s"} still need fixes.`
+        );
+        onImported();
+      }
+      return;
+    }
+
     if (createdCount > 0) {
-      const summary =
-        errorCount > 0
-          ? `Imported ${createdCount} center${createdCount === 1 ? "" : "s"}. ${errorCount} row${errorCount === 1 ? "" : "s"} failed.`
-          : `Imported ${createdCount} franchise center${createdCount === 1 ? "" : "s"}.`;
-      setResultSummary(summary);
+      setResultSummary(`Imported ${createdCount} franchise center${createdCount === 1 ? "" : "s"}.`);
       setImportSucceeded(true);
       onImported();
       window.setTimeout(() => onClose(), 1500);
       return;
     }
 
-    setResultSummary(errorCount ? `${errorCount} row${errorCount === 1 ? "" : "s"} failed on the server.` : "Import failed.");
+    setSubmitError("Import failed.");
   };
 
   const validCount = preview?.validRows.length ?? 0;
@@ -202,12 +244,16 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
           ) : (
             <>
               <p className="ed-import-dialog__intro">
-                Bulk onboard centers for <strong>{brandSlug}</strong>. CSV only · max 500 rows · 2 MB.
+                Bulk onboard centers for <strong>{brandSlug}</strong>. CSV or Excel · max 500 rows · 2 MB. Reimporting the same Franchise Owner name updates that franchise and makes it active again if it was deleted.
               </p>
 
               <ol className="ed-import-steps" aria-label="Import steps">
                 <ImportStep step={1} title="Download the format" hint="Template with headers and sample row.">
-                  <Button type="button" variant="secondary" onClick={() => downloadFranchiseCenterImportTemplate(brandSlug)}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => void downloadFranchiseCenterImportTemplate(brandSlug, programCatalog.map((p) => p.name))}
+                  >
                     Download template
                   </Button>
                 </ImportStep>
@@ -215,16 +261,16 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
                 <ImportStep
                   step={2}
                   title="Add your data"
-                  hint="Required: name, city. URL is created from the name. Optional: display_name, region, country, address, pincode, contact_phone, short_description, owner_email."
+                  hint="Required: Owner Name, city. Optional: proposed_franchise_name (Display Name), state, country (default IN), address, pincode, mobile_number, owner_email, curriculum_assignment."
                 />
 
-                <ImportStep step={3} title="Upload franchise data" hint={uploadedFileName ? `Selected: ${uploadedFileName}` : "Save as .csv, then upload."}>
+                <ImportStep step={3} title="Upload franchise data" hint={uploadedFileName ? `Selected: ${uploadedFileName}` : "Save as .csv, .xlsx, or .xls, then upload."}>
                   <label className="ed-import-dialog__file-label">
                     <span className="ed-btn ed-btn--secondary">Upload Franchise Data</span>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".csv,text/csv"
+                      accept={FRANCHISE_CENTER_IMPORT_ACCEPT}
                       className="ed-import-dialog__file-input"
                       onChange={(e) => void handleFileChange(e.target.files?.[0] ?? null)}
                     />
@@ -240,11 +286,28 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
                 ) : null}
               </ol>
 
-              {fileError ? <MutationError message={fileError} /> : null}
+              {fileError ? (
+                <div className="ed-import-dialog__errors" role="alert">
+                  <p>{fileError}</p>
+                </div>
+              ) : null}
               {preview ? (
                 <>
                   <ImportPreviewTable preview={preview} />
-                  {submitError ? <MutationError message={submitError} /> : null}
+                  {submitError || rowFailures.length > 0 ? (
+                    <div className="ed-import-dialog__errors" role="alert">
+                      {submitError ? <p>{submitError}</p> : null}
+                      {rowFailures.length > 0 ? (
+                        <ul>
+                          {rowFailures.map((failure) => (
+                            <li key={`${failure.rowNumber}-${failure.message}`}>
+                              Spreadsheet row {failure.rowNumber}: {failure.message}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {resultSummary && !importSucceeded ? (
                     <p className="ed-import-dialog__note" role="status">
                       {resultSummary}
