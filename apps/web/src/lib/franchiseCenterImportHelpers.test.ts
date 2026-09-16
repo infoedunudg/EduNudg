@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildImportRow,
   applyFranchiseImportRpcErrors,
+  buildFranchiseDefaultPassword,
   formatFranchiseImportFailureSummary,
   humanizeFranchiseImportServerMessage,
   parseCsvText,
@@ -16,6 +17,11 @@ import {
 } from "./franchiseCenterImportHelpers";
 
 describe("franchiseCenterImportHelpers", () => {
+  it("regression_brand_name_builds_shared_franchise_default_password", () => {
+    expect(buildFranchiseDefaultPassword("Smart Brain Abacus")).toBe("smartbrainabacus@123");
+    expect(buildFranchiseDefaultPassword("Édu Learn")).toBe("edulearn@123");
+  });
+
   it("parses quoted CSV cells", () => {
     expect(parseCsvText('name,city\n"Mumbai, West","Mumbai"')).toEqual([
       ["name", "city"],

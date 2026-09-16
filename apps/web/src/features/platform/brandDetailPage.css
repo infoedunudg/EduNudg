@@ -333,3 +333,31 @@
   font-size: 0.8125rem;
   font-weight: 500;
 }
+
+.ed-import-dialog__success p,
+.ed-import-dialog__password-notice p {
+  margin: 0.25rem 0;
+}
+
+.ed-import-dialog__password-notice {
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ed-success, #15803d) 35%, var(--ed-border, #e2e8f0));
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--ed-success, #15803d) 8%, transparent);
+  color: var(--ed-text, #111827);
+  font-size: 0.8125rem;
+}
+
+.ed-import-dialog__password {
+  display: inline-block;
+  margin: 0.25rem 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  font-weight: 700;
+  user-select: all;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -62,6 +62,7 @@ export function CentersView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const detailColumnRef = useRef<HTMLDivElement>(null);
 
   const centers = useQuery({
     queryKey: ["centers", brandId],
@@ -91,6 +92,11 @@ export function CentersView() {
 
   const selectCenter = (id: string) => {
     setSelectedId(id);
+    if (!isMobile) {
+      requestAnimationFrame(() => {
+        detailColumnRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
     const center = all.find((item) => item.id === id);
     if (center) {
       setSearchParams({ center: center.slug }, { replace: true });
@@ -251,7 +257,9 @@ export function CentersView() {
       ) : (
         <div className="ed-brand-centers__layout">
           {directory}
-          <div className="ed-brand-centers__main">{detailPanel}</div>
+          <div ref={detailColumnRef} className="ed-brand-centers__main">
+            {detailPanel}
+          </div>
         </div>
       )}
 

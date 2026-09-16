@@ -18,7 +18,9 @@ Brand staff SHALL view franchise centers in a two-column layout: searchable list
 
 - **WHEN** brand staff click a franchise in the list
 - **THEN** the detail panel shows profile, KPIs, curriculum assignment, and lifecycle actions
+- **AND** the viewport scrolls smoothly to the top of the second-column detail panel
 - **AND** the list remains visible in the first column
+- **AND** regression `regression_selecting_franchise_scrolls_only_detail_column_to_top` stays green
 
 #### Scenario: Search by name or phone
 

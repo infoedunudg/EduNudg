@@ -48,6 +48,8 @@ pnpm dlx supabase@2.104.0 functions deploy brand-owner-credentials
 
 On **Brand → Franchise Centers** (`/app/centers`), open a center and use **Franchise Identity** → **Login email** / **Password**. Password is required only when creating a new login; leave blank to keep the existing password. **New passwords must be at least 6 characters** — `admin` (5 characters) is rejected by Supabase Auth (HTTP 400). Use `admin1` or longer.
 
+CSV/Excel franchise import automatically provisions rows that have `owner_email`. Their initial password is the brand name collapsed to lowercase alphanumeric characters plus `@123` (`Smart Brain Abacus` → `smartbrainabacus@123`), and the completion dialog displays it. Rows without an owner email have no backend login. Treat the shared brand password as temporary and replace it under **Franchise Identity** after first login. Existing live franchises can be backfilled using the dry-run/apply instructions in [`franchise-center-csv-import.md`](./franchise-center-csv-import.md).
+
 The franchise signs in at `{center}.{brand}.localhost:9000/login` (dev) using that email and password. This provisions Auth + `center_owner` membership via `center-owner-credentials`:
 
 ```bash

@@ -4,6 +4,7 @@ import { Button } from "@edunudg/ui";
 import {
   applyFranchiseCurriculumCatalog,
   applyFranchiseImportRpcErrors,
+  buildFranchiseDefaultPassword,
   downloadFranchiseCenterImportTemplate,
   formatFranchiseImportFailureSummary,
   FRANCHISE_CENTER_IMPORT_ACCEPT,
@@ -14,8 +15,9 @@ import {
   type FranchiseCenterImportPreview,
   type FranchiseImportRowFailure,
 } from "@/lib/franchiseCenterImportHelpers";
-import { importFranchiseCenters } from "@/lib/franchiseCenterImportApi";
+import { fetchFranchiseImportBrandName, importFranchiseCenters } from "@/lib/franchiseCenterImportApi";
 import { fetchBrandPrograms, syncCenterProgramEnablement } from "@/lib/centerProgramApi";
+import { fetchCenterOwnerLoginEmail, upsertCenterOwnerCredentials } from "@/lib/centerOwnerCredentialsApi";
 
 type Props = {
   brandId: string;
@@ -93,6 +95,8 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [resultSummary, setResultSummary] = useState<string | null>(null);
+  const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
+  const [credentialSummary, setCredentialSummary] = useState<string | null>(null);
   const [rowFailures, setRowFailures] = useState<FranchiseImportRowFailure[]>([]);
   const [importSucceeded, setImportSucceeded] = useState(false);
 
@@ -102,6 +106,11 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
     queryFn: () => fetchBrandPrograms(brandId),
   });
   const programCatalog = programs.data ?? [];
+  const brandName = useQuery({
+    queryKey: ["franchise-import-brand-name", brandId],
+    enabled: open && !!brandId,
+    queryFn: () => fetchFranchiseImportBrandName(brandId),
+  });
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -117,6 +126,8 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
       setFileError(null);
       setSubmitError(null);
       setResultSummary(null);
+      setPasswordNotice(null);
+      setCredentialSummary(null);
       setRowFailures([]);
       setImportSucceeded(false);
       setSubmitting(false);
@@ -135,6 +146,8 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
     setFileError(null);
     setSubmitError(null);
     setResultSummary(null);
+    setPasswordNotice(null);
+    setCredentialSummary(null);
     setRowFailures([]);
 
     if (!file) return;
@@ -156,9 +169,12 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
     setSubmitting(true);
     setSubmitError(null);
     setResultSummary(null);
+    setPasswordNotice(null);
+    setCredentialSummary(null);
     setRowFailures([]);
     setImportSucceeded(false);
 
+    const defaultPassword = buildFranchiseDefaultPassword(brandName.data ?? "", brandSlug);
     const { result, error } = await importFranchiseCenters(
       brandId,
       preview.validRows.map((row) => toRpcRow(row))
@@ -170,20 +186,59 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
       return;
     }
 
+    const postImportFailures: FranchiseImportRowFailure[] = [];
+    const readyPreviewRows = preview.rows.filter((row) => row.errors.length === 0);
+    let provisionedLoginCount = 0;
+    let missingEmailCount = 0;
+
     for (const created of result.created) {
       const source = preview.validRows[created.row - 1];
       if (!source) continue;
+
+      let ownerEmail = source.owner_email;
+      if (!ownerEmail) {
+        try {
+          ownerEmail = (await fetchCenterOwnerLoginEmail(created.center_id)) ?? "";
+        } catch {
+          ownerEmail = "";
+        }
+      }
+
+      if (ownerEmail) {
+        const credentials = await upsertCenterOwnerCredentials({
+          centerId: created.center_id,
+          brandId,
+          email: ownerEmail,
+          password: defaultPassword,
+          fullName: source.name,
+        });
+        if (credentials.error) {
+          const spreadsheetRow = readyPreviewRows[created.row - 1];
+          postImportFailures.push({
+            rowNumber: spreadsheetRow?.rowNumber ?? created.row,
+            message: `Franchise was imported, but backend access could not be created: ${credentials.error}`,
+          });
+        } else {
+          provisionedLoginCount += 1;
+        }
+      } else {
+        missingEmailCount += 1;
+      }
+
       const names = parseCurriculumAssignmentCell(source.curriculum_assignment);
       const { ids } = resolveCurriculumProgramIds(names, programCatalog);
       if (ids.length === 0) continue;
       try {
         await syncCenterProgramEnablement(created.center_id, ids);
       } catch (assignErr) {
-        setSubmitting(false);
-        setSubmitError(
-          assignErr instanceof Error ? assignErr.message : "Centers imported, but curriculum assignment failed."
-        );
-        return;
+        const spreadsheetRow = readyPreviewRows[created.row - 1];
+        postImportFailures.push({
+          rowNumber: spreadsheetRow?.rowNumber ?? created.row,
+          message:
+            assignErr instanceof Error
+              ? `Franchise was imported, but curriculum assignment failed: ${assignErr.message}`
+              : "Franchise was imported, but curriculum assignment failed.",
+        });
       }
     }
 
@@ -192,15 +247,29 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
     const createdCount = result.created.length;
     const errorCount = result.errors.length;
 
-    if (errorCount > 0) {
+    if (createdCount > 0) {
+      setPasswordNotice(defaultPassword);
+      const provisionedCopy = `${provisionedLoginCount} backend login${provisionedLoginCount === 1 ? "" : "s"} configured`;
+      const missingCopy =
+        missingEmailCount > 0
+          ? `; ${missingEmailCount} skipped because owner_email was blank`
+          : "";
+      setCredentialSummary(`${provisionedCopy}${missingCopy}.`);
+    }
+
+    if (errorCount > 0 || postImportFailures.length > 0) {
       const applied = applyFranchiseImportRpcErrors(preview, result.errors);
       setPreview(applied.preview);
-      setRowFailures(applied.failures);
-      setSubmitError(formatFranchiseImportFailureSummary(applied.failures));
+      const failures = [...applied.failures, ...postImportFailures];
+      setRowFailures(failures);
+      setSubmitError(
+        errorCount > 0
+          ? formatFranchiseImportFailureSummary(applied.failures)
+          : "Franchises were imported, but some post-import setup steps failed."
+      );
       if (createdCount > 0) {
-        setResultSummary(
-          `Imported ${createdCount} center${createdCount === 1 ? "" : "s"}. ${errorCount} row${errorCount === 1 ? "" : "s"} still need fixes.`
-        );
+        const failureCount = errorCount + postImportFailures.length;
+        setResultSummary(`Imported ${createdCount} center${createdCount === 1 ? "" : "s"}. ${failureCount} item${failureCount === 1 ? "" : "s"} still need fixes.`);
         onImported();
       }
       return;
@@ -210,7 +279,6 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
       setResultSummary(`Imported ${createdCount} franchise center${createdCount === 1 ? "" : "s"}.`);
       setImportSucceeded(true);
       onImported();
-      window.setTimeout(() => onClose(), 1500);
       return;
     }
 
@@ -231,16 +299,29 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
       <div className="ed-import-dialog__panel" role="document">
         <header className="ed-import-dialog__header">
           <h2 id="franchise-import-title">Import franchise centers</h2>
-          <button type="button" className="ed-import-dialog__close" aria-label="Close" onClick={handleClose}>
+          <button
+            type="button"
+            className="ed-import-dialog__close"
+            aria-label="Close import dialog"
+            onClick={handleClose}
+          >
             ×
           </button>
         </header>
 
         <div className="ed-import-dialog__body">
           {importSucceeded ? (
-            <p className="ed-import-dialog__success" role="status">
-              {resultSummary}
-            </p>
+            <div className="ed-import-dialog__success" role="status">
+              <p>{resultSummary}</p>
+              {passwordNotice ? (
+                <>
+                  <p>Default password for imported franchise backend access:</p>
+                  <code className="ed-import-dialog__password">{passwordNotice}</code>
+                  <p>{credentialSummary}</p>
+                  <p>Share it only with the intended franchise owner and change it after first login.</p>
+                </>
+              ) : null}
+            </div>
           ) : (
             <>
               <p className="ed-import-dialog__intro">
@@ -291,6 +372,11 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
                   <p>{fileError}</p>
                 </div>
               ) : null}
+              {brandName.error ? (
+                <div className="ed-import-dialog__errors" role="alert">
+                  <p>Brand name could not be loaded. Refresh and try again before importing.</p>
+                </div>
+              ) : null}
               {preview ? (
                 <>
                   <ImportPreviewTable preview={preview} />
@@ -313,24 +399,41 @@ export function FranchiseCenterImportDialog({ brandId, brandSlug, open, onClose,
                       {resultSummary}
                     </p>
                   ) : null}
+                  {passwordNotice ? (
+                    <div className="ed-import-dialog__password-notice" role="status">
+                      <p>Default password for imported franchise backend access:</p>
+                      <code className="ed-import-dialog__password">{passwordNotice}</code>
+                      <p>{credentialSummary}</p>
+                    </div>
+                  ) : null}
                 </>
               ) : null}
             </>
           )}
         </div>
 
-        {!importSucceeded ? (
-          <footer className="ed-import-dialog__footer">
+        <footer className="ed-import-dialog__footer">
+          {importSucceeded ? (
+            <Button type="button" onClick={handleClose}>
+              Close
+            </Button>
+          ) : (
+            <>
             <Button type="button" variant="ghost" onClick={handleClose} disabled={submitting}>
               Cancel
             </Button>
             {preview ? (
-              <Button type="button" onClick={() => void handleImport()} disabled={submitting || validCount === 0}>
+              <Button
+                type="button"
+                onClick={() => void handleImport()}
+                disabled={submitting || validCount === 0 || brandName.isLoading || !!brandName.error}
+              >
                 {submitting ? "Importing…" : `Import ${validCount} center${validCount === 1 ? "" : "s"}`}
               </Button>
             ) : null}
-          </footer>
-        ) : null}
+              </>
+          )}
+        </footer>
       </div>
     </dialog>
   );

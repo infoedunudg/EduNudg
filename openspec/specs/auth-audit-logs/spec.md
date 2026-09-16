@@ -69,6 +69,14 @@ The system SHALL record fatal client errors on `client_error_reports` via `log_c
 - **THEN** a `client_error_reports` row is stored
 - **AND** the operator sees it under stream Errors on `/admin/audit`
 
+#### Scenario: Ignore the known Chrome DevTools web-vitals exception
+
+- **GIVEN** Chrome DevTools injects a VM/anonymous web-vitals observer
+- **WHEN** `reportAllChanges` throws `Cannot read properties of undefined (reading 'startTime')`
+- **THEN** `ClientErrorReporter` prevents the known external exception from reaching EduNudg telemetry
+- **AND** unrelated application errors that mention `startTime` are still reported
+- **AND** regression `regression_ignores_chrome_devtools_report_all_changes_start_time_error` stays green
+
 ### Requirement: Sensitive access is logged and tenant-visible
 
 CSV exports, Copy Profile URL, owner-credential saves, and platform portal handoff SHALL write `access_audit_logs` via `log_access_audit_event`. Brand `/app/audit` and center `/app/audit` SHALL list Auth + Access for that tenant through `list_tenant_staff_audit`. That RPC SHALL omit raw `ip_address` and SHALL strip failed-login `identifier` / email. Brand owner/admin and center owner/manager MAY read; admissions/finance SHALL NOT. Students SHALL have no staff audit UI.

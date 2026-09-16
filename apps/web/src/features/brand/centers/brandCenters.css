@@ -13,6 +13,7 @@
 
 .ed-brand-centers__main {
   min-width: 0;
+  scroll-margin-top: 1rem;
 }
 
 .ed-brand-centers__placeholder {

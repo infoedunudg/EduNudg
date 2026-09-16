@@ -23,6 +23,7 @@
     "functions:deploy:whatsapp": "supabase functions deploy whatsapp-otp",
     "functions:deploy:passkey": "supabase functions deploy passkey-verify",
     "functions:deploy:brand-owner": "supabase functions deploy brand-owner-credentials",
+    "franchises:set-default-passwords": "node scripts/set-franchise-default-passwords.mjs",
     "openspec:init": "openspec init --tools cursor",
     "openspec:update": "openspec update"
   },

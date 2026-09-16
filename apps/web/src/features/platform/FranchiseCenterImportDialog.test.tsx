@@ -2,13 +2,22 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
+import { exactAccessibleName } from "@/test/exactAccessibleName";
 import { FranchiseCenterImportDialog } from "./FranchiseCenterImportDialog";
 
 const importFranchiseCentersMock = vi.fn();
 const syncCenterProgramEnablementMock = vi.fn();
+const upsertCenterOwnerCredentialsMock = vi.fn();
+const fetchCenterOwnerLoginEmailMock = vi.fn();
 
 vi.mock("@/lib/franchiseCenterImportApi", () => ({
+  fetchFranchiseImportBrandName: vi.fn().mockResolvedValue("Smart Brain Abacus"),
   importFranchiseCenters: (...args: unknown[]) => importFranchiseCentersMock(...args),
+}));
+
+vi.mock("@/lib/centerOwnerCredentialsApi", () => ({
+  fetchCenterOwnerLoginEmail: (...args: unknown[]) => fetchCenterOwnerLoginEmailMock(...args),
+  upsertCenterOwnerCredentials: (...args: unknown[]) => upsertCenterOwnerCredentialsMock(...args),
 }));
 
 vi.mock("@/lib/centerProgramApi", () => ({
@@ -36,6 +45,10 @@ describe("FranchiseCenterImportDialog", () => {
     importFranchiseCentersMock.mockReset();
     syncCenterProgramEnablementMock.mockReset();
     syncCenterProgramEnablementMock.mockResolvedValue(undefined);
+    upsertCenterOwnerCredentialsMock.mockReset();
+    upsertCenterOwnerCredentialsMock.mockResolvedValue({ error: null });
+    fetchCenterOwnerLoginEmailMock.mockReset();
+    fetchCenterOwnerLoginEmailMock.mockResolvedValue(null);
     importFranchiseCentersMock.mockResolvedValue({
       result: { created: [{ row: 1, center_id: "c1", slug: "andheri-west" }], errors: [] },
       error: null,
@@ -73,7 +86,7 @@ describe("FranchiseCenterImportDialog", () => {
     expect(input.accept).toMatch(/\.xls/);
   });
 
-  it("previews valid CSV, imports ready rows, and auto-closes on success", async () => {
+  it("regression_imported_franchises_receive_brand_default_password", async () => {
     const onImported = vi.fn();
     const onClose = vi.fn();
     renderDialog(
@@ -86,8 +99,8 @@ describe("FranchiseCenterImportDialog", () => {
       />
     );
 
-    const csv = `name,city
-Andheri West,Mumbai`;
+    const csv = `name,city,owner_email
+Andheri West,Mumbai,owner@example.com`;
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File([csv], "centers.csv", { type: "text/csv" });
@@ -105,9 +118,43 @@ Andheri West,Mumbai`;
       ]);
       expect(onImported).toHaveBeenCalled();
       expect(screen.getByText(/Imported 1 franchise center/)).toBeDefined();
+      expect(upsertCenterOwnerCredentialsMock).toHaveBeenCalledWith({
+        centerId: "c1",
+        brandId: "b1",
+        email: "owner@example.com",
+        password: "smartbrainabacus@123",
+        fullName: "Andheri West",
+      });
+      expect(screen.getByText("smartbrainabacus@123")).toBeDefined();
     });
 
-    await waitFor(() => expect(onClose).toHaveBeenCalled(), { timeout: 2500 });
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: exactAccessibleName("Close") }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("regression_import_reports_franchises_without_owner_email", async () => {
+    renderDialog(
+      <FranchiseCenterImportDialog
+        brandId="b1"
+        brandSlug="abacusworld"
+        open
+        onClose={() => undefined}
+        onImported={() => undefined}
+      />
+    );
+
+    const csv = `name,city
+Andheri West,Mumbai`;
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File([csv], "centers.csv", { type: "text/csv" })] } });
+
+    const importButton = await screen.findByRole("button", { name: "Import 1 center" });
+    await waitFor(() => expect(importButton).toHaveProperty("disabled", false));
+    fireEvent.click(importButton);
+
+    expect(await screen.findByText(/1 skipped because owner_email was blank/)).toBeDefined();
+    expect(upsertCenterOwnerCredentialsMock).not.toHaveBeenCalled();
   });
 
   it("regression_rejects_malicious_csv_extension", async () => {

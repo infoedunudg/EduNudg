@@ -146,6 +146,36 @@ The system SHALL create franchise centers via `import_franchise_centers(p_brand_
 - **WHEN** at least one center is created
 - **THEN** `log_platform_audit` records `import_franchise_centers` for the brand
 
+### Requirement: Imported franchise backend credentials
+
+After a franchise row with `owner_email` is created or restored, the SPA SHALL provision that center owner's staff login through `center-owner-credentials`. The initial password SHALL be the lowercase brand name with spaces and non-alphanumeric characters removed, followed by `@123`.
+
+#### Scenario: Set the brand-derived initial password
+
+- **GIVEN** brand name `Smart Brain Abacus`
+- **AND** an imported franchise row has `owner_email`
+- **WHEN** the franchise import succeeds
+- **THEN** the owner Auth account is created or updated with password `smartbrainabacus@123`
+- **AND** the center owner membership is active for that franchise
+- **AND** the import completion screen displays that default password and remains open until dismissed
+- **AND** regression `regression_imported_franchises_receive_brand_default_password` stays green
+- **AND** regression `regression_brand_name_builds_shared_franchise_default_password` stays green
+
+#### Scenario: Missing owner email
+
+- **WHEN** a created franchise row has no `owner_email` and no existing owner login
+- **THEN** the franchise remains imported
+- **AND** no Auth account can be provisioned
+- **AND** the completion notice reports that the backend login was skipped
+- **AND** regression `regression_import_reports_franchises_without_owner_email` stays green
+
+#### Scenario: Existing franchise password backfill
+
+- **WHEN** an operator runs `pnpm franchises:set-default-passwords -- --apply`
+- **THEN** the script authenticates as a platform admin and invokes `center-owner-credentials` for live franchises with `owner_email`
+- **AND** the script skips blank owner emails and emails shared across different brands
+- **AND** the service-role key is never exposed to the script or browser
+
 ### Requirement: Import UI on brand detail
 
 Platform admins SHALL import centers from the Franchise centers card on `/admin/brands/:slug`.

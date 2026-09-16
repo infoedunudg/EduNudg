@@ -29,6 +29,8 @@ RP ID: `localhost` for `*.localhost` dev hosts; production hostname (e.g. `edunu
 
 Staff fallback: `signInWithPassword` / magic link invites.
 
+Franchise CSV/Excel import provisions `owner_email` through the authenticated `center-owner-credentials` Edge Function. Its initial password is the lowercase brand name collapsed to one alphanumeric word plus `@123` (for example, `Smart Brain Abacus` → `smartbrainabacus@123`). The import completion dialog displays this value. This is a predictable, brand-shared initial credential; operators must share it out-of-band and replace it per franchise after first login. Rows without an owner email are imported without a backend Auth account.
+
 Post-login redirect honors `?next=` on `/login` (used after platform-admin handoff).
 
 OAuth staff sign-in (`signInWithOAuth`) redirects to `{origin}/login` so membership checks run before `/admin` or `/app`. Legacy returns to `/` with `#access_token` are forwarded to `/login` by `OAuthReturnRedirect`.

@@ -4,6 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CentersPage } from "./CentersPage";
 
+const scrollIntoView = vi.fn();
+
 const { mockCenters, downloadTextFile, downloadBrandCentersExport } = vi.hoisted(() => ({
   downloadTextFile: vi.fn(),
   downloadBrandCentersExport: vi.fn().mockResolvedValue(undefined),
@@ -153,6 +155,7 @@ describe("CentersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     polyfillDialog();
+    Element.prototype.scrollIntoView = scrollIntoView;
   });
 
   it("regression_centers_management_layout", async () => {
@@ -193,6 +196,18 @@ describe("CentersPage", () => {
     expect(screen.getByLabelText("Display Name")).toBeDefined();
     expect(screen.getByLabelText("State")).toBeDefined();
     expect(screen.getByRole("button", { name: "Save Changes" })).toBeDefined();
+  });
+
+  it("regression_selecting_franchise_scrolls_only_detail_column_to_top", async () => {
+    renderPage();
+    const center = await screen.findByRole("button", { name: /Abacus Koramangala/i });
+
+    fireEvent.click(center);
+
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    });
+    expect(scrollIntoView.mock.contexts[0]).toBe(document.querySelector(".ed-brand-centers__main"));
   });
 
   it("regression_search_by_phone", async () => {

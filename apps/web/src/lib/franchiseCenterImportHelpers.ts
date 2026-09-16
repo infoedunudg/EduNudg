@@ -467,6 +467,17 @@ export function formatFranchiseImportFailureSummary(failures: FranchiseImportRow
   return `${failures.length} ${noun} failed on the server. Fix the highlighted spreadsheet rows and upload again.`;
 }
 
+/** Shared initial franchise password requested by brand operations. */
+export function buildFranchiseDefaultPassword(brandName: string, brandSlug = ""): string {
+  const normalizedName = brandName
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const normalizedSlug = brandSlug.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return `${normalizedName || normalizedSlug || "franchise"}@123`;
+}
+
 function sheetCellToString(value: unknown): string {
   if (value == null) return "";
   if (typeof value === "string") return value;
