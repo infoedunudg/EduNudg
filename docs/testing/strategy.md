@@ -64,6 +64,7 @@ See OpenSpec [`staff-login`](../../openspec/specs/staff-login/spec.md). Helper: 
 - Vitest **≥4** (workspace) — required for Node 24 + jsdom + React Router client navigations (AbortSignal/`undici` compatibility)
 - Login portal tests that mount `RequireMembership` mock `@/lib/supabase` so center status does not hit the network
 - Local mirror before push: **`pnpm ci:local`** (skill `edunudg-pre-push-ci` — mandatory; auto-fix, then push only when green). Cursor **`gate-git-push.sh` denies** push without a green stamp; **`.githooks/pre-push`** is backup (`pnpm hooks:install`).
+- `@edunudg/web` `build` post-check is `scripts/assert-web-dist.mjs` (cross-platform) — not Unix `test -f` / `ls` (`regression_webBuildAssertsDistCrossPlatform`).
 
 ## Local dev
 
