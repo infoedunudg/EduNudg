@@ -4,6 +4,7 @@ import {
   isWordDocument,
   type BrandLegalPageDocument,
 } from "@/lib/brandLegalPages";
+import { sanitizeLegalHtml } from "@/lib/sanitizeLegalHtml";
 
 type Props = {
   doc: BrandLegalPageDocument;
@@ -33,7 +34,7 @@ export function BrandLegalPageContent({ doc, title }: Props) {
         }
         const text = await response.text();
         if (!cancelled) {
-          setHtml(text);
+          setHtml(sanitizeLegalHtml(text));
           setLoadError(null);
         }
       } catch (err) {

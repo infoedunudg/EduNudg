@@ -121,3 +121,34 @@ Center staff SHALL shop and track kit orders at `/app/merchandise` with the same
 - **AND** search also matches those course and level names
 
 Traceability: regression — `regression_center_merchandise_shop_shows_catalog_curriculum`, `regression_center_merchandise_shop_title_wraps_instead_of_overlapping_price`, `regression_center_merchandise_shop_row_image_is_at_least_double_width`.
+
+### Requirement: Razorpay checkout Edge Function is authenticated
+
+Center staff SHALL start Razorpay checkout only through the `merchandise-razorpay-checkout` Edge Function with a signed-in JWT. The function SHALL reject anonymous callers and callers without center, brand, or platform access to the order.
+
+#### Scenario: Checkout requires membership on the order
+
+- **GIVEN** a merchandise order for a franchise center
+- **WHEN** `merchandise-razorpay-checkout` is invoked without a valid user JWT
+- **THEN** the function returns 401
+- **WHEN** a signed-in user without center, brand, or platform access to that order calls it
+- **THEN** the function returns 403
+- **WHEN** a center (or brand/platform) member for that order calls it
+- **THEN** the function may create a Razorpay order (or return the Razorpay stub when keys are unset)
+
+Traceability: regression — `regression_merchandise_razorpay_checkout_requires_membership`.
+
+### Requirement: Payment reminder cron is fail-closed
+
+The `merchandise-payment-reminders` Edge Function SHALL require a configured `CRON_SECRET` and matching `x-cron-secret` header. Missing secret configuration SHALL return 503; a wrong or missing header SHALL return 401.
+
+#### Scenario: Reminders reject open callers
+
+- **GIVEN** `CRON_SECRET` is unset in Edge Function secrets
+- **WHEN** any client POSTs `merchandise-payment-reminders`
+- **THEN** the function returns 503 and does not run service-role reminder processing
+- **GIVEN** `CRON_SECRET` is set
+- **WHEN** the request omits or mismatches `x-cron-secret`
+- **THEN** the function returns 401
+
+Traceability: regression — `regression_merchandise_reminders_require_cron_secret`.

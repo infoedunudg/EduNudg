@@ -34,6 +34,9 @@ Allowed MIME types match the `brand-assets` bucket: PNG, JPEG, WebP, GIF (5 MB p
 
 Brand-configurable: Razorpay checkout, invoice/bank transfer, or both (`brand_settings.settings.merchandise`).
 
+- **Razorpay start:** SPA calls Edge Function `merchandise-razorpay-checkout` via `functions.invoke` (session JWT). The function requires a signed-in user with `has_center_access`, `has_brand_access`, or `is_platform_admin` for the order; anonymous `order_id` lookups are rejected (`regression_merchandise_razorpay_checkout_requires_membership`).
+- **Payment reminders:** Edge Function `merchandise-payment-reminders` is cron-only. Set `CRON_SECRET` in function secrets and pass `x-cron-secret` from the scheduler. Missing secret → 503; wrong header → 401 (`regression_merchandise_reminders_require_cron_secret`).
+
 ## Related
 
 - Canonical behavior: [`openspec/specs/brand-merchandise/spec.md`](../../openspec/specs/brand-merchandise/spec.md)

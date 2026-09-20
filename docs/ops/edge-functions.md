@@ -9,6 +9,9 @@ EduNudg functions live in [`supabase/functions/`](../../supabase/functions/):
 | `brand-owner-credentials` | Platform admin: create/update brand owner Auth user + membership |
 | `center-owner-credentials` | Brand staff (or platform admin): create/update center owner Auth user + `center_owner` membership |
 | `auth-audit` | Login/logout/failure ingest; stamps IP hash + country after `log_auth_audit_event` |
+| `merchandise-razorpay-checkout` | Center/brand/platform staff: start Razorpay order for a merchandise order (JWT + membership required) |
+| `merchandise-payment-reminders` | Cron-only reminder batch; requires `CRON_SECRET` + `x-cron-secret` (fail closed) |
+| `platform-portal-handoff` | Platform admin cross-portal support handoff |
 
 **SPA rule:** `BrandEditForm` calls `brand-owner-credentials` only when login email or password fields change (`credentialsChanged`). Saving website theme, name, or status alone must not invoke credentials — otherwise edge 400s block unrelated brand edits.
 
@@ -38,6 +41,8 @@ supabase functions deploy platform-portal-handoff
 supabase functions deploy brand-owner-credentials
 supabase functions deploy center-owner-credentials
 supabase functions deploy auth-audit
+supabase functions deploy merchandise-razorpay-checkout
+supabase functions deploy merchandise-payment-reminders
 ```
 
 ## Deploy all functions
@@ -47,6 +52,24 @@ supabase functions deploy
 ```
 
 CLI bundles each folder under `supabase/functions/<name>/` and uploads to your project.
+
+## Merchandise secrets
+
+```bash
+# Required for payment reminder cron (fail closed if unset)
+supabase secrets set CRON_SECRET="$(openssl rand -hex 32)"
+
+# Optional Razorpay (function returns stub JSON when unset)
+supabase secrets set RAZORPAY_KEY_ID=your_key_id
+supabase secrets set RAZORPAY_KEY_SECRET=your_key_secret
+
+# Optional email delivery for reminders
+supabase secrets set RESEND_API_KEY=your_resend_key
+```
+
+Schedule `merchandise-payment-reminders` with header `x-cron-secret: <same value as CRON_SECRET>`. Do not expose that secret to the browser.
+
+Auth contracts (for tests): `apps/web/src/lib/merchandiseEdgeSecurity.ts`.
 
 ## Verify deployment
 

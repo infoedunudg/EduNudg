@@ -19,6 +19,7 @@
     "@simplewebauthn/browser": "^13.0.0",
     "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-query": "^5.62.8",
+    "dompurify": "^3.2.6",
     "mammoth": "^1.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
