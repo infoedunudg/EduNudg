@@ -28,4 +28,15 @@ describe("resolveFeatureFlags (FF-01..03)", () => {
     expect(resolveFeatureFlags(undefined, "competitions")).toBe(false);
     expect(resolveFeatureFlags({ competitions: true }, "competitions")).toBe(true);
   });
+
+  it("regression_learn_nav_shows_events_when_competitions_flag_on", async () => {
+    const { studentNavSections } = await import("@/lib/portalNav");
+    const withFlag = studentNavSections("/", { competitions: true });
+    const labels = withFlag.flatMap((s) => s.items.map((i) => i.label));
+    expect(labels).toContain("Events");
+
+    const withoutFlag = studentNavSections("/", { competitions: false });
+    const labelsOff = withoutFlag.flatMap((s) => s.items.map((i) => i.label));
+    expect(labelsOff).not.toContain("Events");
+  });
 });

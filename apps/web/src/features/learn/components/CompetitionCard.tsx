@@ -15,6 +15,8 @@ type Props = {
   enrollError?: string | null;
   quizActionLabel?: string;
   onQuizAction?: () => void;
+  papersActionLabel?: string;
+  onPapersAction?: () => void;
   secondaryAction?: ReactNode;
 };
 
@@ -31,6 +33,8 @@ export function CompetitionCard({
   enrollError,
   quizActionLabel,
   onQuizAction,
+  papersActionLabel,
+  onPapersAction,
   secondaryAction,
 }: Props) {
   const isPaid = feeType === "paid" || enrollBlockedReason === "paid_coming_soon";
@@ -64,6 +68,11 @@ export function CompetitionCard({
           </Button>
         ) : null}
         {onQuizAction && quizActionLabel ? <Button onClick={onQuizAction}>{quizActionLabel}</Button> : null}
+        {onPapersAction && papersActionLabel ? (
+          <Button variant="secondary" onClick={onPapersAction}>
+            {papersActionLabel}
+          </Button>
+        ) : null}
         {secondaryAction}
       </div>
     </article>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { formatShortDate } from "@/features/learn/studentFormatters";
 
 type Props = {
@@ -7,6 +8,7 @@ type Props = {
   feeType: string;
   statusTag?: string;
   accentIndex?: number;
+  href?: string;
 };
 
 const ACCENTS = [
@@ -48,9 +50,10 @@ export function RecommendedEventCard({
   feeType,
   statusTag,
   accentIndex = 0,
+  href = "/competitions",
 }: Props) {
   return (
-    <article className="ed-sp-recommend-card ed-sp-recommend-card--desktop">
+    <Link to={href} className="ed-sp-recommend-card ed-sp-recommend-card--desktop">
       <div
         className="ed-sp-recommend-card__media"
         style={{ background: ACCENTS[accentIndex % ACCENTS.length] }}
@@ -64,7 +67,8 @@ export function RecommendedEventCard({
         </span>
         <h3 className="ed-sp-recommend-card__title">{name}</h3>
         <p className="ed-sp-recommend-card__meta">{subtitle(eventDate, location, feeType, accentIndex)}</p>
+        <p className="ed-sp-recommend-card__cta">View events →</p>
       </div>
-    </article>
+    </Link>
   );
 }

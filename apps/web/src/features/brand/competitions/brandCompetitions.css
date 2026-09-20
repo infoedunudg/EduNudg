@@ -4,6 +4,23 @@
   gap: 0.75rem;
 }
 
+.ed-comp-papers-next {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--ed-radius-md, 0.5rem);
+  border: 1px solid color-mix(in srgb, var(--ed-primary, #2563eb) 35%, var(--ed-border, #e2e8f0));
+  background: color-mix(in srgb, var(--ed-primary, #2563eb) 8%, var(--ed-card, #fff));
+}
+
+.ed-comp-papers-next p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--ed-fg, #0f172a);
+}
+
 .ed-comp-questions__attached,
 .ed-comp-questions__bank,
 .ed-comp-options__preview {
