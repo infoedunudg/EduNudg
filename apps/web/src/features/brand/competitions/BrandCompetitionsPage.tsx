@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CatalogPageHeader, CatalogToolbar, FilterTabs } from "@edunudg/ui";
 import { canAny } from "@edunudg/permissions";
 import { BrandCompetitionQuestionBankSection } from "@/features/brand/competitions/BrandCompetitionQuestionBankSection";
+import { BrandCompetitionPapersSection } from "@/features/brand/competitions/BrandCompetitionPapersSection";
 import { BrandCompetitionsSection } from "@/features/brand/competitions/BrandCompetitionsSection";
 import { useBrandScope } from "@/features/brand/hooks/useBrandScope";
 import { useMembership } from "@/hooks/useMembership";
@@ -11,6 +12,7 @@ import "./brandCompetitions.css";
 const TABS = [
   { id: "events", label: "Events" },
   { id: "bank", label: "Question bank" },
+  { id: "papers", label: "Question papers" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -55,6 +57,13 @@ export function BrandCompetitionsPage() {
 
       {activeTab === "events" ? <BrandCompetitionsSection brandId={brandId} canEdit={canEdit} /> : null}
       {activeTab === "bank" ? <BrandCompetitionQuestionBankSection brandId={brandId} canEdit={canEdit} /> : null}
+      {activeTab === "papers" ? (
+        <BrandCompetitionPapersSection
+          brandId={brandId}
+          canEdit={canEdit}
+          onGoToEvents={() => setActiveTab("events")}
+        />
+      ) : null}
     </div>
   );
 }

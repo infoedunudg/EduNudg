@@ -10,6 +10,7 @@ import {
   ToggleField,
 } from "@edunudg/ui";
 import { BrandCompetitionQuestionsPanel } from "@/features/brand/competitions/BrandCompetitionQuestionsPanel";
+import { BrandCompetitionPapersPanel } from "@/features/brand/competitions/BrandCompetitionPapersPanel";
 import { CrudRowActions } from "@/features/platform/components/CrudRowActions";
 import { useMutationError } from "@/features/platform/hooks/useMutationError";
 import { AddFormSection } from "@/features/shared/AddFormSection";
@@ -270,14 +271,21 @@ export function BrandCompetitionsSection({ brandId, canEdit }: Props) {
                             variant="secondary"
                             onClick={() => setQuestionsFor((id) => (id === c.id ? null : c.id))}
                           >
-                            {questionsFor === c.id ? "Hide questions" : "Questions"}
+                            {questionsFor === c.id ? "Hide questions & papers" : "Questions & papers"}
                           </Button>
                           {questionsFor === c.id ? (
-                            <BrandCompetitionQuestionsPanel
-                              brandId={brandId}
-                              competitionId={c.id}
-                              canEdit={canEdit}
-                            />
+                            <>
+                              <BrandCompetitionQuestionsPanel
+                                brandId={brandId}
+                                competitionId={c.id}
+                                canEdit={canEdit}
+                              />
+                              <BrandCompetitionPapersPanel
+                                brandId={brandId}
+                                competitionId={c.id}
+                                canEdit={canEdit}
+                              />
+                            </>
                           ) : null}
                         </>
                       )}

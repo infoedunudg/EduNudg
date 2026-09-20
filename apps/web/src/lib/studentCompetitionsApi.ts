@@ -18,6 +18,9 @@ export type RegisteredCompetition = {
   can_take?: boolean;
   score?: number | null;
   max_score?: number | null;
+  paper_count?: number;
+  has_papers?: boolean;
+  can_view_papers?: boolean;
 };
 
 export type PastCompetitionResult = {

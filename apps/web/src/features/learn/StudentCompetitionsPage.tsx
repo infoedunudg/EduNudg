@@ -10,6 +10,7 @@ import {
 import { useTenant } from "@/bootstrap/TenantProvider";
 import { CompetitionCard } from "@/features/learn/components/CompetitionCard";
 import { StudentCompetitionQuizPanel } from "@/features/learn/components/StudentCompetitionQuizPanel";
+import { StudentCompetitionPapersPanel } from "@/features/learn/components/StudentCompetitionPapersPanel";
 import { SectionCard, StudentEmptyState, StudentPageHeading, StudentPortalLoading } from "@/features/learn/components/StudentPortalShell";
 import { StudentTabBar } from "@/features/learn/components/StudentTabBar";
 import { StudentEnrollmentBlockedPage } from "@/features/learn/StudentEnrollmentBlockedPage";
@@ -39,12 +40,17 @@ function quizLabel(status?: string, canTake?: boolean): string | undefined {
   return undefined;
 }
 
+function isRegisteredStatus(status?: string | null): boolean {
+  return status === "registered" || status === "confirmed" || status === "waitlisted";
+}
+
 export function StudentCompetitionsPage() {
   const tenant = useTenant();
   const brandId = tenant.brandId!;
   const [tab, setTab] = useState<Tab>("upcoming");
   const [selectedPastId, setSelectedPastId] = useState<string | null>(null);
   const [quizCompetitionId, setQuizCompetitionId] = useState<string | null>(null);
+  const [papersCompetitionId, setPapersCompetitionId] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const list = useQuery({
@@ -57,6 +63,7 @@ export function StudentCompetitionsPage() {
   const enroll = useMutation({
     mutationFn: registerForCompetition,
     onSuccess: () => {
+      setTab("registered");
       void qc.invalidateQueries({ queryKey: ["student-competitions", brandId] });
       void qc.invalidateQueries({ queryKey: ["student-learn-home", brandId] });
     },
@@ -80,12 +87,42 @@ export function StudentCompetitionsPage() {
   const selectedPast =
     pastItems.find((r) => r.competition_id === selectedPastId) ?? pastItems[0] ?? null;
 
+  function upcomingCardProps(c: StudentCompetitionCard) {
+    const enrolled = isRegisteredStatus(c.my_registration_status);
+    return {
+      statusTag: enrolled ? c.my_registration_status : undefined,
+      canEnroll: c.can_enroll,
+      enrollBlockedReason: c.enroll_blocked_reason,
+      onEnroll: enrolled
+        ? undefined
+        : () =>
+            enroll.mutate(c.id, {
+              onSuccess: () => {
+                if (c.has_papers) setPapersCompetitionId(c.id);
+              },
+            }),
+      enrollPending: enroll.isPending,
+      quizActionLabel: quizLabel(c.quiz_status, c.can_take),
+      onQuizAction: quizLabel(c.quiz_status, c.can_take)
+        ? () => setQuizCompetitionId(c.id)
+        : undefined,
+      papersActionLabel: c.can_view_papers ? "View papers" : undefined,
+      onPapersAction: c.can_view_papers ? () => setPapersCompetitionId(c.id) : undefined,
+    };
+  }
+
   return (
     <div className="ed-sp-stack">
       <StudentPageHeading title="Competitions" subtitle="Register for events, take quizzes, and view your results." />
 
       {quizCompetitionId ? (
         <StudentCompetitionQuizPanel competitionId={quizCompetitionId} onClose={() => setQuizCompetitionId(null)} />
+      ) : null}
+      {papersCompetitionId ? (
+        <StudentCompetitionPapersPanel
+          competitionId={papersCompetitionId}
+          onClose={() => setPapersCompetitionId(null)}
+        />
       ) : null}
 
       <StudentTabBar tabs={["upcoming", "registered", "past"] as const} value={tab} onChange={setTab} labels={TAB_LABELS} />
@@ -104,16 +141,7 @@ export function StudentCompetitionsPage() {
               eventDate={heroCompetition.event_date}
               location={heroCompetition.location}
               feeType={heroCompetition.fee_type}
-              canEnroll={heroCompetition.can_enroll}
-              enrollBlockedReason={heroCompetition.enroll_blocked_reason}
-              onEnroll={() => enroll.mutate(heroCompetition.id)}
-              enrollPending={enroll.isPending}
-              quizActionLabel={quizLabel(heroCompetition.quiz_status, heroCompetition.can_take)}
-              onQuizAction={
-                quizLabel(heroCompetition.quiz_status, heroCompetition.can_take)
-                  ? () => setQuizCompetitionId(heroCompetition.id)
-                  : undefined
-              }
+              {...upcomingCardProps(heroCompetition)}
             />
           </div>
         )}
@@ -176,7 +204,7 @@ export function StudentCompetitionsPage() {
                 text={
                   tab === "upcoming"
                     ? "New competitions from your brand will appear here when registration opens."
-                    : "Enroll in an upcoming event to see it here."
+                    : "Enroll in an upcoming event to see it here. Question papers appear on this tab after you enroll (when the brand attached papers)."
                 }
               />
             )}
@@ -190,14 +218,7 @@ export function StudentCompetitionsPage() {
                     eventDate={c.event_date}
                     location={c.location}
                     feeType={c.fee_type}
-                    canEnroll={c.can_enroll}
-                    enrollBlockedReason={c.enroll_blocked_reason}
-                    onEnroll={() => enroll.mutate(c.id)}
-                    enrollPending={enroll.isPending}
-                    quizActionLabel={quizLabel(c.quiz_status, c.can_take)}
-                    onQuizAction={
-                      quizLabel(c.quiz_status, c.can_take) ? () => setQuizCompetitionId(c.id) : undefined
-                    }
+                    {...upcomingCardProps(c)}
                   />
                 ))}
               </div>
@@ -218,6 +239,10 @@ export function StudentCompetitionsPage() {
                       r.can_take || r.quiz_status === "submitted"
                         ? () => setQuizCompetitionId(r.competition_id)
                         : undefined
+                    }
+                    papersActionLabel={r.can_view_papers ? "View papers" : undefined}
+                    onPapersAction={
+                      r.can_view_papers ? () => setPapersCompetitionId(r.competition_id) : undefined
                     }
                     secondaryAction={
                       r.fee_type === "free" && r.status === "registered" ? (

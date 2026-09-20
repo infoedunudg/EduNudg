@@ -88,7 +88,9 @@ RPC `set_franchise_center_status` — brand-only `active` ↔ `suspended` (Disab
 | `student_competition_entries` | center | Post-event results |
 | `competition_question_bank` | brand | MCQ bank tagged to course + level |
 | `competition_question_options` | brand | Options for a bank question (`is_correct`) |
+| `competition_question_papers` | brand | PDF/Excel/CSV papers tagged to course + level (`file_url` in `brand-assets`) |
 | `brand_competition_questions` | brand | Snapshotted questions attached to an event |
+| `brand_competition_papers` | brand | Papers attached to an event (enrolled students only) |
 | `student_competition_attempts` | center | One quiz attempt per student per competition |
 | `student_competition_attempt_answers` | center | Selected options + correctness after submit |
 

@@ -36,4 +36,8 @@ erDiagram
   brand_competitions ||--o{ brand_competition_questions : snapshots
   programs ||--o{ competition_question_bank : banks
   levels ||--o{ competition_question_bank : tags
+  programs ||--o{ competition_question_papers : papers
+  levels ||--o{ competition_question_papers : tags
+  brand_competitions ||--o{ brand_competition_papers : attaches
+  competition_question_papers ||--o{ brand_competition_papers : linked
   students ||--o{ student_competition_attempts : takes

@@ -48,14 +48,13 @@ function useBrandFeaturesQuery() {
       (tenant.portalType === "brand" || tenant.portalType === "center" || tenant.portalType === "learn") &&
       !!brandId,
     queryFn: async () => {
-      const { data, error } = await getSupabase()
-        .from("brand_settings")
-        .select("settings")
-        .eq("brand_id", brandId!)
-        .maybeSingle();
+      // Students (and other non-brand-staff roles) cannot SELECT brand_settings under RLS.
+      // Use SECURITY DEFINER RPC so Learn portal can show flag-gated nav (e.g. Events).
+      const { data, error } = await getSupabase().rpc("get_brand_feature_flags", {
+        p_brand_id: brandId!,
+      });
       if (error) throw error;
-      const features = (data?.settings as Record<string, unknown> | undefined)?.features;
-      return (features as Record<string, boolean> | undefined) ?? {};
+      return (data as Record<string, boolean> | null) ?? {};
     },
     staleTime: 60_000,
   });

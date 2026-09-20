@@ -539,6 +539,8 @@
   box-shadow: var(--ed-shadow);
   overflow: hidden;
   min-height: 100%;
+  text-decoration: none;
+  color: inherit;
 }
 
 .ed-sp-recommend-card__media {
@@ -594,6 +596,13 @@
   color: var(--ed-muted);
   line-height: 1.4;
   flex: 1;
+}
+
+.ed-sp-recommend-card__cta {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ed-primary);
 }
 
 .ed-sp-recommend-card__action {
@@ -2474,6 +2483,15 @@
 
 .ed-sp-quiz__score {
   font-weight: 600;
+}
+
+.ed-sp-paper-viewer {
+  width: 100%;
+  min-height: 28rem;
+  margin-top: 1rem;
+  border: 1px solid var(--ed-border, #e2e8f0);
+  border-radius: 0.5rem;
+  background: #fff;
 }
 
 @media (min-width: 1024px) {

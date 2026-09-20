@@ -43,6 +43,8 @@ export function useFeatureFlag(key: string): boolean {
 }
 ```
 
+Learn (and brand/center) clients load brand flags via RPC `get_brand_feature_flags(p_brand_id)` — not a direct `brand_settings` SELECT — so students without `has_brand_access` still see flag-gated nav (e.g. Events when `competitions` is ON).
+
 - Sidebar: omit items when flag false.
 - Route: optional `FeatureFlagRoute` wrapper redirecting to `/app` if off.
 

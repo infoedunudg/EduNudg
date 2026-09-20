@@ -21,9 +21,23 @@ The system SHALL expose a **Competitions** toggle on the platform brand Features
 - **WHEN** feature resolution runs (client or `brand_feature_enabled`)
 - **THEN** Competitions is treated as disabled
 
+### Requirement: Learn portal reads competitions flag via RPC
+
+Authenticated students SHALL resolve brand feature flags through `get_brand_feature_flags(brand_id)` rather than selecting `brand_settings` directly, so Events nav can appear when Competitions is ON.
+
+#### Scenario: Student sees Events when competitions is ON
+
+- **GIVEN** `features.competitions` is true for the brand
+- **AND** the student cannot SELECT `brand_settings` under RLS
+- **WHEN** Learn loads feature flags
+- **THEN** `get_brand_feature_flags` returns the competitions flag
+- **AND** Events appears in the student nav
+
 ### Requirement: Full gate when Competitions is off
 
 When Competitions is disabled for a brand, the system SHALL hide the brand Competitions nav item, redirect `/app/competitions` to `/app`, hide student Events nav and `/competitions`, reject competition/bank/quiz mutations with `feature_disabled`, and omit competition cards from `get_student_learn_home`.
+
+Learn clients SHALL resolve `features.competitions` via `get_brand_feature_flags` (migration `105`) so Events can appear without a direct `brand_settings` SELECT.
 
 #### Scenario: Brand staff cannot open Competitions when off
 
@@ -89,6 +103,37 @@ Brand owners SHALL create multiple-choice questions with 2–6 options and at le
 - **GIVEN** brand staff submits a question with fewer than 2 or more than 6 options, or zero correct answers
 - **WHEN** the RPC runs
 - **THEN** it raises an error and does not insert
+
+### Requirement: Brand question papers by curriculum course and level
+
+Brand owners SHALL upload PDF, Excel, or CSV question papers tagged to a `program_id` (course) and `level_id`, then attach them to competition events. Students SHALL receive paper URLs only after enrollment.
+
+#### Scenario: Upload a paper to the bank
+
+- **GIVEN** brand staff on `/app/competitions` Question papers tab
+- **WHEN** they choose course, level, title, and a PDF/Excel/CSV file and upload
+- **THEN** `upsert_competition_question_paper` stores metadata and a `brand-assets` file URL
+
+#### Scenario: Attach paper to event
+
+- **GIVEN** active papers in the bank for course C level L
+- **WHEN** brand staff opens Events → event → **Questions & papers**, selects course/level, and attaches those papers to competition K
+- **THEN** `brand_competition_papers` links them to K
+- **AND** the Question papers bank shows a next-step prompt to attach on Events (upload alone does not enroll-show papers)
+
+#### Scenario: Student sees papers only after enroll
+
+- **GIVEN** competition K has attached papers
+- **WHEN** a student views Upcoming without enrolling
+- **THEN** the event card does not offer View papers
+- **WHEN** the student enrolls
+- **THEN** Learn switches to **My registrations**
+- **AND** opens question papers when `has_papers` is true
+- **WHEN** the student is registered and opens View papers (Upcoming or My registrations)
+- **THEN** `get_student_competition_papers` returns titles and file URLs
+- **AND** an unregistered caller receives `NOT_REGISTERED`
+
+Traceability: regression — `regression_competition_paper_accepts_pdf_excel_csv`, `regression_competition_card_omits_papers_on_upcoming_enroll_ui`, `regression_competition_card_shows_view_papers_when_enrolled`, `regression_enroll_opens_my_registrations_and_papers_when_attached`, `regression_competitions_page_has_question_papers_tab`.
 
 ### Requirement: Attach questions to a competition by pick or random draw
 

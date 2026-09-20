@@ -128,9 +128,9 @@ Traceability: FR-S13
 
 ### Requirement: Learn portal navigation
 
-The learn portal SHALL expose navigation items: Dashboard (`/`), Progress (`/progress`), Activity (`/activity`), and Profile (`/profile`). Competitions (`/competitions`, labeled Events) SHALL appear only when `brand_settings.settings.features.competitions` is true.
+The learn portal SHALL expose navigation items: Dashboard (`/`), Progress (`/progress`), Activity (`/activity`), and Profile (`/profile`). Competitions (`/competitions`, labeled Events) SHALL appear only when `brand_settings.settings.features.competitions` is true. Learn clients SHALL load that flag via `get_brand_feature_flags(brand_id)` (SECURITY DEFINER) because students cannot SELECT `brand_settings` under RLS. Home “Recommended for You” competition cards SHALL link to `/competitions`.
 
-Traceability: FR-S14, FR-S22
+Traceability: FR-S14, FR-S22; regression — `regression_learn_nav_shows_events_when_competitions_flag_on`
 
 #### Scenario: Authenticated student sees expanded nav
 
@@ -143,6 +143,13 @@ Traceability: FR-S14, FR-S22
 - **WHEN** student opens the learn portal shell and `features.competitions` is false
 - **THEN** Events is omitted from sidebar and bottom nav
 - **AND** `/competitions` redirects to `/`
+
+#### Scenario: Learn loads competitions flag without brand_settings SELECT
+
+- **GIVEN** an authenticated student without `has_brand_access`
+- **WHEN** the Learn shell resolves feature flags
+- **THEN** `get_brand_feature_flags` returns `settings.features` for the brand
+- **AND** Events nav appears when `competitions` is true
 
 ### Requirement: Curriculum progress ladder
 

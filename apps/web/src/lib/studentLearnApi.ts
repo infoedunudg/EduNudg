@@ -106,6 +106,9 @@ export type StudentCompetitionCard = {
   question_count?: number;
   quiz_status?: string;
   can_take?: boolean;
+  paper_count?: number;
+  has_papers?: boolean;
+  can_view_papers?: boolean;
 };
 
 export type StudentProfilePayload = {
