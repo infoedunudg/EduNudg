@@ -43,9 +43,10 @@ async function uploadObject(path: string, body: Blob | File, contentType: string
 
 async function convertDocxToHtml(file: File): Promise<string> {
   const mammoth = await import("mammoth");
+  const { sanitizeLegalHtml } = await import("@/lib/sanitizeLegalHtml");
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.convertToHtml({ arrayBuffer });
-  return result.value;
+  return sanitizeLegalHtml(result.value);
 }
 
 export async function uploadBrandLegalPage(

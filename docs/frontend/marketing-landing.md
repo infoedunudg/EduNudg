@@ -14,6 +14,8 @@ Public marketing landings share one UI kit under `apps/web/src/features/marketin
 
 **Public SEO / AEO / GEO:** titles, descriptions, canonicals, Open Graph, robots, and JSON-LD are derived automatically (`derivePublicSeo` in `publicSeo.ts`) from landing, published courses, legal uploads, and franchise identity. No SEO editor fields. `PortalDocumentHead` applies the same snapshot in the SPA. Production Vercel rewrites `/robots.txt`, `/sitemap.xml`, `/llms.txt`, and `/.well-known/ai.txt` ahead of the SPA catch-all, and injects head tags only on indexable HTML (`/`, `/about`, `/courses/:slug`, `/legal/:kind`). `/login` and `/app` stay on static `/index.html` so a function crash cannot take down staff login. Sitemaps list real routes only (not `#programs`, `/login`, or unpublished `/about`). Center homepages localize `{Brand} in {City}` and canonicalize to the center host. Spec: [`openspec/specs/public-seo/spec.md`](../../openspec/specs/public-seo/spec.md).
 
+**Legal HTML:** Word uploads are converted with Mammoth, then sanitized via `sanitizeLegalHtml` (DOMPurify) before Storage write and again before public inject (`BrandLegalPageContent`). Spec: [`openspec/specs/marketing-footer/spec.md`](../../openspec/specs/marketing-footer/spec.md).
+
 ## Brand marketing themes
 
 Platform admins assign a theme per brand at **Platform → Brands → Edit** (`/admin/brands/:slug`) in **Brand settings** → **Website theme**. Stored on `brands.marketing_theme`. **Site logo** and a renamed **Name** on that same form persist to Homepage `landing.meta` (shared with `{brand}/app/homepage`) — `brands.logo_url` is only the login/chrome copy.

@@ -14,7 +14,11 @@ AND legal link labels are **Privacy Policy**, **Terms & Conditions**, and **Refu
 GIVEN an admin uploads a privacy, terms, or refund document in Homepage Configuration
 WHEN they save and a visitor opens `/legal/{kind}`
 THEN the published PDF or converted Word HTML is shown
+AND Word-derived HTML is sanitized with DOMPurify before storage and before `dangerouslySetInnerHTML` inject
+AND `<script>`, event handlers, and `javascript:` URLs are stripped
 AND the footer includes a link to that route when configured or uploaded
+
+Traceability: regression — `regression_legal_html_strips_script_and_event_handlers`, `regression_legal_page_strips_script_tags_before_inject`.
 
 ### Brand footer editing
 
