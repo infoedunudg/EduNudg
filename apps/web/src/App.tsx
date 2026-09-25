@@ -18,9 +18,9 @@ function AppThemeShell({ children }: { children: ReactNode }) {
 
 export function App() {
   return (
-    <TenantProvider>
-      <AuthProvider>
-        <BrowserRouter>
+    <BrowserRouter>
+      <TenantProvider>
+        <AuthProvider>
           <PortalDocumentHead />
           <OAuthReturnRedirect />
           <AppThemeShell>
@@ -28,8 +28,8 @@ export function App() {
               <AppRoutes />
             </ClientErrorReporter>
           </AppThemeShell>
-        </BrowserRouter>
-      </AuthProvider>
-    </TenantProvider>
+        </AuthProvider>
+      </TenantProvider>
+    </BrowserRouter>
   );
 }

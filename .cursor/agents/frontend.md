@@ -20,7 +20,7 @@
 
 ## Checklist
 
-- [ ] Uses `TenantProvider` and typed Supabase client
+- [ ] Uses `TenantProvider` (inside `BrowserRouter`; re-resolves when `?portal=` changes) and typed Supabase client
 - [ ] RBAC checked via `@edunudg/permissions`
 - [ ] **New feature = new folder** under `features/` — do not mix into existing pages
 - [ ] **Services layer** for DB RPC, auth, payments (`apps/web/src/services/`)

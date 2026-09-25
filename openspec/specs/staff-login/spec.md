@@ -80,6 +80,14 @@ Staff `/login` SHALL NOT sign the user out until memberships for the current use
 - **AND** SHALL fall back to the sticky portal override when the current search string is empty
 - **AND** SHALL NOT land on bare `/login` while a center/brand portal context is known
 
+#### Scenario: Portal tenant re-resolves after platform admin opens a center or learn URL
+
+- **GIVEN** the SPA first loaded as the platform portal on a same-origin host (`*.vercel.app`)
+- **WHEN** the user navigates to `/login?portal=center&brand=…&center=…` or `/login?portal=learn&brand=…&center=…` without a full document reload
+- **THEN** `TenantProvider` SHALL re-resolve so `portalType` matches the query (center or learn)
+- **AND** after platform/brand logout, a center owner or student signing in on that URL SHALL NOT be signed out solely because tenant context stayed `platform`
+- **AND** `/admin` on a platform host SHALL still clear the sticky portal override
+
 #### Scenario: Invited brand owner can enter the brand portal
 
 - **GIVEN** a `brand_owner` membership with status `invited` (platform brand signup approved, credentials not yet synced)
