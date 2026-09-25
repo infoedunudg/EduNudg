@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { postLoginPath, preservedPortalSearch } from "./postLoginPath";
+import { afterEach, describe, expect, it } from "vitest";
+import { clearPortalOverride, writePortalOverride } from "@/lib/portalOverride";
+import { loginPathWithPortal, postLoginPath, preservedPortalSearch } from "./postLoginPath";
 
 describe("postLoginPath", () => {
+  afterEach(() => {
+    clearPortalOverride();
+  });
+
   it("sends platform users to /admin", () => {
     expect(postLoginPath({ portalType: "platform" })).toBe("/admin");
   });
@@ -22,5 +27,22 @@ describe("postLoginPath", () => {
         new URLSearchParams("portal=center&brand=abacusworld&center=pune&next=/app")
       )
     ).toBe("?portal=center&brand=abacusworld&center=pune");
+  });
+
+  it("regression_login_redirect_keeps_portal_query_from_search", () => {
+    expect(
+      loginPathWithPortal("?portal=center&brand=smart-brain-abacus&center=chaitali-gokul-tajanpure")
+    ).toBe("/login?portal=center&brand=smart-brain-abacus&center=chaitali-gokul-tajanpure");
+  });
+
+  it("regression_login_redirect_restores_sticky_center_portal_when_search_empty", () => {
+    writePortalOverride({
+      portalType: "center",
+      brandSlug: "smart-brain-abacus",
+      centerSlug: "chaitali-gokul-tajanpure",
+    });
+    expect(loginPathWithPortal("")).toBe(
+      "/login?portal=center&brand=smart-brain-abacus&center=chaitali-gokul-tajanpure"
+    );
   });
 });

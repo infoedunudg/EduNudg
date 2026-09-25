@@ -1,4 +1,5 @@
 import type { TenantContext } from "@edunudg/tenant";
+import { portalOverrideSearchParams, readPortalOverride } from "@/lib/portalOverride";
 
 const PORTAL_QUERY_KEYS = ["portal", "brand", "center"] as const;
 
@@ -11,6 +12,20 @@ export function preservedPortalSearch(search: URLSearchParams): string {
   }
   const qs = next.toString();
   return qs ? `?${qs}` : "";
+}
+
+/**
+ * Staff auth gates must not strip `?portal=&brand=&center=` when sending users to `/login`.
+ * Falls back to the sticky session override so Vercel same-origin center logins survive a bounce.
+ */
+export function loginPathWithPortal(search?: string): string {
+  const fromUrl = preservedPortalSearch(new URLSearchParams(search ?? ""));
+  if (fromUrl) return `/login${fromUrl}`;
+
+  const override = readPortalOverride();
+  if (!override) return "/login";
+  const qs = portalOverrideSearchParams(override).toString();
+  return qs ? `/login?${qs}` : "/login";
 }
 
 /** Where to send the user after a successful staff email/password sign-in. */

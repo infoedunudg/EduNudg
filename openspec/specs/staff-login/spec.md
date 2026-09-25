@@ -72,6 +72,14 @@ Staff `/login` SHALL NOT sign the user out until memberships for the current use
 - **THEN** `accept_own_invited_memberships` SHALL set the row to `active`
 - **AND** the app SHALL redirect to `/app` (keeping portal query params on same-origin hosts)
 
+#### Scenario: Auth bounce back to login keeps same-origin portal query
+
+- **GIVEN** a staff session on `/app?portal=center&brand=…&center=…` (Vercel same-origin)
+- **WHEN** `RequireAuth` or `RequireMembership` sends the user to login
+- **THEN** the destination SHALL be `/login?portal=center&brand=…&center=…`
+- **AND** SHALL fall back to the sticky portal override when the current search string is empty
+- **AND** SHALL NOT land on bare `/login` while a center/brand portal context is known
+
 #### Scenario: Invited brand owner can enter the brand portal
 
 - **GIVEN** a `brand_owner` membership with status `invited` (platform brand signup approved, credentials not yet synced)
