@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ThemeProvider } from "@edunudg/ui";
 import { useTenant } from "@/bootstrap/TenantProvider";
@@ -9,6 +9,7 @@ import { hasPortalMembership } from "@/lib/portalMembership";
 import { getSupabase } from "@/lib/supabase";
 import { supabaseMaybe } from "@/lib/supabaseResult";
 import { CenterSuspendedPage } from "./CenterSuspendedPage";
+import { loginPathWithPortal } from "./postLoginPath";
 
 function hasBrandOversightRole(
   memberships: ReturnType<typeof useMembership>["data"],
@@ -26,6 +27,7 @@ function hasBrandOversightRole(
 
 export function RequireMembership({ children }: { children: ReactNode }) {
   const tenant = useTenant();
+  const location = useLocation();
   const { tenant: portalTenant, isResolving: portalTenantResolving } = useResolvedPortalTenant();
   const { data: memberships, isLoading, isFetched, isError } = useMembership();
 
@@ -58,7 +60,13 @@ export function RequireMembership({ children }: { children: ReactNode }) {
   }
 
   if (!hasPortalMembership(memberships, portalTenant)) {
-    return <Navigate to="/login" replace state={{ reason: "no_membership" }} />;
+    return (
+      <Navigate
+        to={loginPathWithPortal(location.search)}
+        replace
+        state={{ reason: "no_membership" }}
+      />
+    );
   }
 
   if (

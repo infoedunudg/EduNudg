@@ -8,7 +8,7 @@ Bookmark sheet for client demos on **Vercel** (`https://edunudg-hub.vercel.app`)
 | Brand slug | `smart-brain-abacus` |
 | Portal suffix | `?portal=brand&brand=smart-brain-abacus` |
 
-On `*.vercel.app` (same-origin mode), every brand/center/learn URL needs `portal` and `brand` query params. The path (`/`, `/login`, `/app`) comes **before** the `?`.
+On `*.vercel.app` (same-origin mode), every brand/center/learn URL needs `portal` and `brand` query params. The path (`/`, `/login`, `/app`) comes **before** the `?`. Staff auth bounces (`RequireAuth` / `RequireMembership`) MUST keep those params (or restore the sticky portal override) — bare `/login` on a Preview host drops center context and signs franchise owners out. Regressions: `regression_login_redirect_keeps_portal_query_from_search`, `regression_login_redirect_restores_sticky_center_portal_when_search_empty`, `regression_no_membership_redirect_keeps_center_portal_query`.
 
 **Wrong:** `...?brand=smart-brain-abacus/login` — `/login` becomes part of the slug.  
 **Right:** `.../login?portal=brand&brand=smart-brain-abacus`

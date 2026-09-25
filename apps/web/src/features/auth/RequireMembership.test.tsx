@@ -251,4 +251,47 @@ describe("RequireMembership", () => {
       expect(screen.getByText("Center app")).toBeDefined();
     });
   });
+
+  it("regression_no_membership_redirect_keeps_center_portal_query", async () => {
+    tenantState.portalType = "center";
+    tenantState.brandId = "brand-1";
+    tenantState.centerId = "center-1";
+    tenantState.brandSlug = "smart-brain-abacus";
+    tenantState.centerSlug = "chaitali-gokul-tajanpure";
+    membershipState.data = [];
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const router = createMemoryRouter(
+      [
+        { path: "/login", element: <LoginPage /> },
+        {
+          path: "/app",
+          element: (
+            <RequireMembership>
+              <div>Center app</div>
+            </RequireMembership>
+          ),
+        },
+      ],
+      {
+        initialEntries: [
+          "/app?portal=center&brand=smart-brain-abacus&center=chaitali-gokul-tajanpure",
+        ],
+      }
+    );
+
+    render(
+      <QueryClientProvider client={qc}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(signOut).toHaveBeenCalled();
+    });
+    expect(router.state.location.pathname).toBe("/login");
+    expect(router.state.location.search).toBe(
+      "?portal=center&brand=smart-brain-abacus&center=chaitali-gokul-tajanpure"
+    );
+  });
 });

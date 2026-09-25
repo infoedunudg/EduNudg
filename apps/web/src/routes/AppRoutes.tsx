@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "@/bootstrap/AuthProvider";
 import { useTenant } from "@/bootstrap/TenantProvider";
 import { FeatureFlagRoute } from "@/features/auth/FeatureFlagRoute";
 import { RequireMembership } from "@/features/auth/RequireMembership";
 import { AuthHandoffPage } from "@/features/auth/AuthHandoffPage";
 import { LoginPage } from "@/features/auth/LoginPage";
+import { loginPathWithPortal } from "@/features/auth/postLoginPath";
 import { PlatformLayout } from "@/features/platform/PlatformLayout";
 import { CommandCenter } from "@/features/platform/CommandCenter";
 import { BrandsPage } from "@/features/platform/BrandsPage";
@@ -68,6 +69,7 @@ import { ThemeProvider } from "@edunudg/ui";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
+  const location = useLocation();
   if (loading) {
     return (
       <ThemeProvider>
@@ -77,7 +79,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
       </ThemeProvider>
     );
   }
-  if (!session) return <Navigate to="/login" replace />;
+  if (!session) return <Navigate to={loginPathWithPortal(location.search)} replace />;
   return <>{children}</>;
 }
 
