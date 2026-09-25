@@ -11,7 +11,8 @@ alwaysApply: true
 2. Never ship `SUPABASE_SERVICE_ROLE_KEY` to the browser.
 3. Every query must respect tenant context from `TenantProvider` + memberships.
 4. Platform admins are the only role that can cross brands — via RLS `is_platform_admin()`, not client flags alone.
-5. New tables need RLS policies in the same migration.
+5. Brand owners/admins may access all centers under their brand; center staff must not elevate via `user_brand_ids()` / `has_brand_access` (migration `107_center_staff_tenant_scope.sql`).
+6. New tables need RLS policies in the same migration.
 
 ## Tenant columns
 
