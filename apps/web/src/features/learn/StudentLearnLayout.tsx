@@ -11,6 +11,7 @@ import { useBrandFeatureFlags } from "@/hooks/useFeatureFlag";
 import { resolveShellProductName } from "@/lib/portalBranding";
 import { displayUserFromAuth } from "@/lib/portalUser";
 import { fetchStudentLearnHome, StudentLearnRpcError } from "@/lib/studentLearnApi";
+import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import "@/features/learn/studentPortal.css";
 
 export function StudentLearnLayout() {
@@ -30,6 +31,7 @@ export function StudentLearnLayout() {
 
   const home = studentProfile.data;
   const student = home?.student;
+  const avatarUrl = useSignedStorageUrl(student?.profile.photo_url);
   const brandingRow = branding ?? {
     brandId: null,
     brandSlug: null,
@@ -54,7 +56,6 @@ export function StudentLearnLayout() {
   );
   const authProfile = displayUserFromAuth(user);
   const studentCode = student?.student_code;
-  const avatarUrl = student?.profile.photo_url;
 
   return (
     <AppShell

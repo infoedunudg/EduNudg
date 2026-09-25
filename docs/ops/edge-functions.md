@@ -5,13 +5,13 @@ EduNudg functions live in [`supabase/functions/`](../../supabase/functions/):
 | Function | Purpose |
 |----------|---------|
 | `whatsapp-otp` | Send/verify WhatsApp OTP (stub — wire Twilio/Gupshup later) |
-| `passkey-verify` | WebAuthn login + registration (`login-options`, `login-verify`, `register-options`, `register-verify`, `list`, `delete`) |
+| `platform-portal-handoff` | Platform admin cross-portal support handoff (redirect allowlist: localhost, `*.edunudg.com`, `*.vercel.app`, or a hostname present in `domain_mappings`) |
+| `passkey-verify` | WebAuthn login + registration (`login-options`, `login-verify`, `register-options`, `register-verify`, `list`, `delete`); origins limited to localhost / `*.edunudg.com` / `*.vercel.app` |
 | `brand-owner-credentials` | Platform admin: create/update brand owner Auth user + membership |
 | `center-owner-credentials` | Brand staff (or platform admin): create/update center owner Auth user + `center_owner` membership |
 | `auth-audit` | Login/logout/failure ingest; stamps IP hash + country after `log_auth_audit_event` |
 | `merchandise-razorpay-checkout` | Center/brand/platform staff: start Razorpay order for a merchandise order (JWT + membership required) |
 | `merchandise-payment-reminders` | Cron-only reminder batch; requires `CRON_SECRET` + `x-cron-secret` (fail closed) |
-| `platform-portal-handoff` | Platform admin cross-portal support handoff |
 
 **SPA rule:** `BrandEditForm` calls `brand-owner-credentials` only when login email or password fields change (`credentialsChanged`). Saving website theme, name, or status alone must not invoke credentials — otherwise edge 400s block unrelated brand edits.
 

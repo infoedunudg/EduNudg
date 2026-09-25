@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { StaggerLabel } from "./StaggerLabel";
 import { marketingHrefWithPublicOrigin, useMarketingPublicOrigin } from "./MarketingPublicOrigin";
+import { sanitizeMarketingHref } from "@/lib/sanitizeMarketingHref";
 
 export type MarketingCtaVariant = "on-dark" | "on-light";
 
@@ -40,7 +41,7 @@ export function MarketingCtaLink({
   );
 
   const publicOrigin = useMarketingPublicOrigin();
-  const resolvedHref = marketingHrefWithPublicOrigin(href, publicOrigin);
+  const resolvedHref = sanitizeMarketingHref(marketingHrefWithPublicOrigin(href, publicOrigin));
   const a11y = { "aria-label": label };
 
   if (resolvedHref.startsWith("#") || /^https?:/i.test(resolvedHref)) {

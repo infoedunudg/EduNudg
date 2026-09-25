@@ -112,7 +112,8 @@ Brand owners SHALL upload PDF, Excel, or CSV question papers tagged to a `progra
 
 - **GIVEN** brand staff on `/app/competitions` Question papers tab
 - **WHEN** they choose course, level, title, and a PDF/Excel/CSV file and upload
-- **THEN** `upsert_competition_question_paper` stores metadata and a `brand-assets` file URL
+- **THEN** `upsert_competition_question_paper` stores metadata and a **private** `brand-private:{path}` ref (not a public CDN URL)
+- **AND** enrolled students open the file only via short-lived signed URLs
 
 #### Scenario: Attach paper to event
 

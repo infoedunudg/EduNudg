@@ -22,7 +22,8 @@ Learn Events nav uses `get_brand_feature_flags` (migration `105`) so students ca
 ## Question papers (files)
 
 - Brand uploads **PDF / Excel / CSV** under Competitions → **Question papers** (course + level)
-- Files live in `brand-assets` at `{brand_id}/competitions/papers/{paper_id}/…`
+- Files live in private `brand-private` at `{brand_id}/competitions/papers/{paper_id}/…` (not public CDN)
+- DB stores `brand-private:{path}`; UI opens short-lived signed URLs after enroll / brand access
 - Staff attach papers to an **Event**: Events → event → **Questions & papers** → select course/level → Attach selected papers
 - Question papers bank prompts **Go to Events to attach** after upload (library alone is not enough for students)
 - Students see **View papers** only after enroll (`get_student_competition_papers` raises `NOT_REGISTERED` otherwise)

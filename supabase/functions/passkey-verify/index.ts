@@ -58,7 +58,7 @@ function isAllowedOrigin(origin: string): boolean {
     if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".localhost")) return true;
     if (host.endsWith(".edunudg.com")) return true;
     if (host.endsWith(".vercel.app")) return true;
-    return host.split(".").length >= 2;
+    return false;
   } catch {
     return false;
   }
@@ -69,6 +69,8 @@ function resolveRpId(origin: string): string {
   if (host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1") {
     return "localhost";
   }
+  if (host.endsWith(".edunudg.com")) return "edunudg.com";
+  // Vercel preview / production project host — bind RP ID to that host (WebAuthn requirement).
   return host;
 }
 

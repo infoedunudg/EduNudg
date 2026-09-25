@@ -1,6 +1,7 @@
 import { getSupabase } from "@/lib/supabase";
+import { BRAND_PRIVATE_BUCKET, toBrandPrivateRef } from "@/lib/secureStorageUrl";
 
-export const COMPETITION_PAPERS_BUCKET = "brand-assets";
+export const COMPETITION_PAPERS_BUCKET = BRAND_PRIVATE_BUCKET;
 export const COMPETITION_PAPER_ACCEPT =
   ".pdf,.csv,.xlsx,.xls,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 export const COMPETITION_PAPER_MAX_BYTES = 10 * 1024 * 1024;
@@ -95,8 +96,8 @@ export async function uploadCompetitionPaperFile(
     cacheControl: "3600",
   });
   if (uploadErr) throw uploadErr;
-  const { data } = getSupabase().storage.from(COMPETITION_PAPERS_BUCKET).getPublicUrl(path);
-  return { fileUrl: data.publicUrl, fileName: file.name, mimeType };
+  // Store private ref — never a public CDN URL (enrollment gate cannot protect public objects).
+  return { fileUrl: toBrandPrivateRef(path), fileName: file.name, mimeType };
 }
 
 export async function listCompetitionQuestionPapers(

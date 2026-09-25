@@ -1,10 +1,13 @@
--- RLS smoke test: brand-assets storage policies
+-- RLS smoke test: brand-assets + brand-private storage policies
 -- Run via: pnpm test:rls
 
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'brand-assets') THEN
     RAISE EXCEPTION 'Missing brand-assets storage bucket';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'brand-private' AND public = false) THEN
+    RAISE EXCEPTION 'Missing private brand-private storage bucket — apply migration 106';
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
@@ -29,6 +32,12 @@ BEGIN
     WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'brand_assets_student_self'
   ) THEN
     RAISE EXCEPTION 'Missing brand_assets_student_self policy';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'brand_private_student_competition_papers'
+  ) THEN
+    RAISE EXCEPTION 'Missing brand_private_student_competition_papers policy — apply migration 106';
   END IF;
   IF NOT EXISTS (
     SELECT 1

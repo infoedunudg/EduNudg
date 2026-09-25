@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { uploadStudentPhoto } from "@/lib/studentPhotoStorage";
+import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 
@@ -26,23 +27,34 @@ export function StudentPhotoUpload({
   hero,
 }: Props) {
   const inputId = useId();
-  const [preview, setPreview] = useState(currentPhotoUrl?.trim() || "");
+  const signedCurrent = useSignedStorageUrl(currentPhotoUrl);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
-    setPreview(currentPhotoUrl?.trim() || "");
+    setLocalPreview(null);
   }, [currentPhotoUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (localPreview?.startsWith("blob:")) URL.revokeObjectURL(localPreview);
+    };
+  }, [localPreview]);
+
+  const preview = localPreview || signedCurrent || "";
 
   const handleChange = async (file: File | undefined) => {
     if (!file) return;
     setLocalError(null);
     setPending(true);
     try {
-      const url = await uploadStudentPhoto(brandId, studentId, file);
-      setPreview(url);
-      onUploaded(url);
+      const blobUrl = URL.createObjectURL(file);
+      setLocalPreview(blobUrl);
+      const ref = await uploadStudentPhoto(brandId, studentId, file);
+      onUploaded(ref);
     } catch (err) {
+      setLocalPreview(null);
       setLocalError(err instanceof Error ? err.message : "Photo upload failed");
     } finally {
       setPending(false);

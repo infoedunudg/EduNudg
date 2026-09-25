@@ -8,6 +8,7 @@ import {
   Input,
 } from "@edunudg/ui";
 import type { BrandStudentRow } from "@/lib/brandStudentsApi";
+import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import {
   displayOrDash,
   formatStudentDate,
@@ -28,6 +29,7 @@ const noop = (_value: string) => undefined;
 export function BrandStudentDetailPanel({ student, isMobile }: Props) {
   const initials = studentInitials(student);
   const studentId = student.student_code ?? student.id.slice(0, 8).toUpperCase();
+  const photoUrl = useSignedStorageUrl(student.photo_url);
   const status = (
     <CenterStatusBadge status={studentStatusTone(student)}>{studentStatusLabel(student)}</CenterStatusBadge>
   );
@@ -37,7 +39,7 @@ export function BrandStudentDetailPanel({ student, isMobile }: Props) {
       {isMobile ? (
         <CenterMobileHeroBanner
           initials={initials}
-          imageUrl={student.photo_url}
+          imageUrl={photoUrl}
           title={student.full_name}
           slug={studentId}
           slugLabel="Student ID"
@@ -45,7 +47,7 @@ export function BrandStudentDetailPanel({ student, isMobile }: Props) {
       ) : (
         <CenterDetailHero
           initials={initials}
-          imageUrl={student.photo_url}
+          imageUrl={photoUrl}
           title={student.full_name}
           franchiseId={studentId}
           idLabel="Student ID"
