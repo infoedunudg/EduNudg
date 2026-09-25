@@ -47,6 +47,12 @@ export function readPortalOverride(): PortalOverride | null {
     return fromUrl;
   }
 
+  return readStickyPortalOverride();
+}
+
+/** Session sticky only — used when React Router search has no portal params. */
+export function readStickyPortalOverride(): PortalOverride | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;

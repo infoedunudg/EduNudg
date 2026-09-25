@@ -1,12 +1,15 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import type { TenantContext } from "@edunudg/tenant";
 import { isPlatformHost, resolveTenantFromHost } from "@edunudg/tenant";
 import { getSupabase } from "@/lib/supabase";
 import { resolveTenantScope } from "@/lib/resolveTenantScope";
 import {
   clearPortalOverride,
-  readPortalOverride,
+  parsePortalOverrideFromSearch,
+  readStickyPortalOverride,
   syntheticLookupHostname,
+  writePortalOverride,
   type PortalOverride,
 } from "@/lib/portalOverride";
 
@@ -22,56 +25,88 @@ function lookupHostnameForResolution(override: PortalOverride | null): string {
   return host;
 }
 
-function activePortalOverride(): PortalOverride | null {
+/** Prefer React Router search so in-tab portal switches re-resolve without a full reload. */
+function activePortalOverride(pathname: string, search: string): PortalOverride | null {
   const hostname = window.location.hostname;
-  const path = window.location.pathname;
-  // Platform admin shell must stay on platform portal even if a sticky override exists.
-  if (path.startsWith("/admin") && isPlatformHost(hostname)) {
+  if (pathname.startsWith("/admin") && isPlatformHost(hostname)) {
     clearPortalOverride();
     return null;
   }
-  return readPortalOverride();
+
+  const fromUrl = parsePortalOverrideFromSearch(search);
+  if (fromUrl) {
+    writePortalOverride(fromUrl);
+    return fromUrl;
+  }
+
+  // Sticky override when the URL has no portal params (e.g. auth bounce before loginPathWithPortal).
+  return readStickyPortalOverride();
+}
+
+function portalResolutionKey(pathname: string, search: string): string {
+  const override = activePortalOverride(pathname, search);
+  return [
+    pathname,
+    search,
+    override?.portalType ?? "",
+    override?.brandSlug ?? "",
+    override?.centerSlug ?? "",
+  ].join("\0");
 }
 
 function initialTenant(): TenantContext {
-  return resolveTenantFromHost(lookupHostnameForResolution(activePortalOverride()));
+  return resolveTenantFromHost(
+    lookupHostnameForResolution(
+      activePortalOverride(window.location.pathname, window.location.search)
+    )
+  );
 }
 
 export function TenantProvider({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const [tenant, setTenant] = useState<TenantContext>(initialTenant);
-  const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
+  const resolutionKey = portalResolutionKey(location.pathname, location.search);
 
   useEffect(() => {
-    const override = activePortalOverride();
+    let cancelled = false;
+    const override = activePortalOverride(location.pathname, location.search);
     const effectiveLookup = lookupHostnameForResolution(override);
-    const timeout = setTimeout(() => setLoading(false), 2000);
+    const timeout = setTimeout(() => {
+      if (!cancelled) setReady(true);
+    }, 2000);
 
     let supabase: ReturnType<typeof getSupabase>;
     try {
       supabase = getSupabase();
     } catch {
       clearTimeout(timeout);
-      setTenant(resolveTenantFromHost(effectiveLookup));
-      setLoading(false);
+      if (!cancelled) {
+        setTenant(resolveTenantFromHost(effectiveLookup));
+        setReady(true);
+      }
       return;
     }
 
     void (async () => {
       try {
         const resolved = await resolveTenantScope(supabase, effectiveLookup);
-        setTenant(resolved);
+        if (!cancelled) setTenant(resolved);
       } catch {
-        setTenant(resolveTenantFromHost(effectiveLookup));
+        if (!cancelled) setTenant(resolveTenantFromHost(effectiveLookup));
       } finally {
         clearTimeout(timeout);
-        setLoading(false);
+        if (!cancelled) setReady(true);
       }
     })();
 
-    return () => clearTimeout(timeout);
-  }, []);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [resolutionKey, location.pathname, location.search]);
 
-  if (loading) {
+  if (!ready) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
         Loading EduNudg…
