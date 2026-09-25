@@ -25,7 +25,28 @@ function isAllowedRedirect(url: string): boolean {
     const host = parsed.hostname.toLowerCase();
     if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".localhost")) return true;
     if (host.endsWith(".edunudg.com")) return true;
-    return host.split(".").length >= 2;
+    if (host.endsWith(".vercel.app")) return true;
+    // Custom franchise/brand domains are allowlisted via domain_mappings (checked async below).
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function isAllowedRedirectAsync(
+  url: string,
+  admin: ReturnType<typeof createClient>
+): Promise<boolean> {
+  if (isAllowedRedirect(url)) return true;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    const { data, error } = await admin
+      .from("domain_mappings")
+      .select("hostname")
+      .eq("hostname", host)
+      .maybeSingle();
+    if (error) return false;
+    return Boolean(data?.hostname);
   } catch {
     return false;
   }
@@ -59,7 +80,7 @@ Deno.serve(async (req) => {
   }
 
   const redirectTo = body.redirectTo?.trim();
-  if (!redirectTo || !isAllowedRedirect(redirectTo)) {
+  if (!redirectTo) {
     return jsonResponse({ error: "Valid redirectTo URL is required" }, 400);
   }
 
@@ -87,6 +108,10 @@ Deno.serve(async (req) => {
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  if (!(await isAllowedRedirectAsync(redirectTo, adminClient))) {
+    return jsonResponse({ error: "Valid redirectTo URL is required" }, 400);
+  }
 
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: "magiclink",

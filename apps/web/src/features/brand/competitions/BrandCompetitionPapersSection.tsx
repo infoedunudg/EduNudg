@@ -275,7 +275,13 @@ export function BrandCompetitionPapersSection({ brandId, canEdit, onGoToEvents }
                         <div className="ed-sp-actions">
                           <Button
                             variant="secondary"
-                            onClick={() => window.open(row.file_url, "_blank", "noopener,noreferrer")}
+                            onClick={() => {
+                              void import("@/lib/secureStorageUrl").then(({ openSecureStorageUrl }) =>
+                                openSecureStorageUrl(row.file_url, row.file_name).catch((err) => {
+                                  window.alert(err instanceof Error ? err.message : "Could not open file.");
+                                })
+                              );
+                            }}
                           >
                             Open file
                           </Button>

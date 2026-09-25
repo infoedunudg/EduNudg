@@ -11,8 +11,8 @@ vi.mock("@/lib/supabase", () => ({
   getSupabase: () => ({
     storage: {
       from: () => ({
-        upload: vi.fn(),
-        getPublicUrl: vi.fn(),
+        upload: vi.fn().mockResolvedValue({ error: null }),
+        createSignedUrl: vi.fn(),
       }),
     },
     rpc: vi.fn(),
@@ -51,5 +51,13 @@ describe("competitionQuestionPapersApi", () => {
     expect(competitionPaperObjectPath("brand-1", "paper-1", "Level 1.pdf")).toMatch(
       /^brand-1\/competitions\/papers\/paper-1\/\d+-Level-1\.pdf$/
     );
+  });
+
+  it("regression_competition_paper_upload_stores_private_ref", async () => {
+    const { uploadCompetitionPaperFile } = await import("./competitionQuestionPapersApi");
+    const file = new File(["%PDF"], "paper.pdf", { type: "application/pdf" });
+    const uploaded = await uploadCompetitionPaperFile("brand-1", "paper-1", file);
+    expect(uploaded.fileUrl.startsWith("brand-private:")).toBe(true);
+    expect(uploaded.fileUrl).toContain("brand-1/competitions/papers/paper-1/");
   });
 });
