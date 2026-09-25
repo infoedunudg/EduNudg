@@ -34,7 +34,7 @@
 
 - RLS on all tenant tables; storage policies per bucket
 - Public writes only through RPC
-- `has_brand_access`, `has_center_access`, `is_platform_admin` helpers
+- `has_brand_access`, `has_center_access`, `is_platform_admin` helpers (`user_brand_ids` excludes center-scoped memberships; see `107_center_staff_tenant_scope.sql`)
 
 ## Branding & brand-assets storage
 

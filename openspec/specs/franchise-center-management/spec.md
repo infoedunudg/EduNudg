@@ -127,6 +127,19 @@ Brand staff SHALL disable and enable franchises reversibly (`set_franchise_cente
 - **THEN** `franchise_centers.status` becomes `active`
 - **AND** center staff access is restored
 
+### Requirement: Center staff stay on their franchise
+
+Active center memberships SHALL NOT grant brand-wide access. `user_brand_ids()` / `has_brand_access` SHALL only reflect brand and platform scopes. Center staff SHALL access their own center (and students enrolled there) via `has_center_access` / `student_enrolled_at_accessible_center`, and MAY read brand catalog rows for that brand via `has_center_staff_for_brand` without mutating other franchises.
+
+#### Scenario: Center membership does not elevate to brand
+
+- **GIVEN** an active `scope_type = 'center'` membership for franchise Mumbai under brand Spark
+- **WHEN** RLS helpers evaluate brand and center access
+- **THEN** `has_brand_access(Spark)` is false
+- **AND** `has_center_access(Mumbai)` is true
+- **AND** `has_center_access(Delhi)` is false for another franchise under Spark
+- **AND** regression `regression_center_staff_membership_does_not_grant_brand_access` stays green
+
 ### Requirement: Soft-delete franchise
 
 Brand staff with `centers.delete` SHALL remove a franchise from Brand Backend via `soft_delete_franchise_center`.
