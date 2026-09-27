@@ -34,9 +34,34 @@ describe("HomepageEditorShell", () => {
     expect(container.querySelector(".ed-editor-page-header")).toBeTruthy();
     expect(container.querySelector(".ed-homepage-editor-shell--has-save")).toBeTruthy();
     expect(container.querySelector(".ed-editor-save-bar")).toBeTruthy();
-    expect(screen.getByText("Changes are currently in draft.")).toBeDefined();
+    expect(screen.getByText("You have unsaved changes.")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Save changes/i }));
     expect(onSave).toHaveBeenCalled();
+  });
+
+  it("regression_homepage_save_bar_status_avoids_draft_wording", () => {
+    const { rerender } = render(
+      <HomepageEditorShell title="Homepage Configuration" onSave={vi.fn()} isDirty>
+        <p>Form</p>
+      </HomepageEditorShell>
+    );
+    expect(screen.getByText("You have unsaved changes.")).toBeDefined();
+    expect(screen.queryByText(/currently in draft/i)).toBeNull();
+
+    rerender(
+      <HomepageEditorShell title="Homepage Configuration" onSave={vi.fn()} saved>
+        <p>Form</p>
+      </HomepageEditorShell>
+    );
+    expect(screen.getByText("Saved.")).toBeDefined();
+    expect(screen.getByText("Saved.").className).toContain("ed-editor-save-bar__status--ok");
+
+    rerender(
+      <HomepageEditorShell title="Homepage Configuration" onSave={vi.fn()}>
+        <p>Form</p>
+      </HomepageEditorShell>
+    );
+    expect(screen.getByText("No unsaved changes.")).toBeDefined();
   });
 
   it("regression_homepage_save_stays_enabled_when_clean", () => {

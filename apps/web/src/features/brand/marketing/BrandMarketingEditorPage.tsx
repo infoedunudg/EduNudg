@@ -23,9 +23,9 @@ import { formatLastSavedLabel } from "@/lib/formatRelativeTime";
 import type { BrandLegalPages } from "@/lib/brandLegalPages";
 import type { BrandSocialConnect } from "@/lib/brandSocialConnect";
 import {
-  missingRequiredMarketingPhotoLabels,
+  focusMarketingEditorSection,
+  missingRequiredMarketingPhotos,
   requiredMarketingPhotosMessage,
-  scrollMarketingEditorToBottom,
 } from "@/lib/marketingRequiredPhotos";
 import { usesAlternateThemeEditor } from "@/lib/marketingThemeLayout";
 import type { HomepageConfig } from "@/types/homepage";
@@ -185,7 +185,7 @@ function BrandMarketingLandingEditor({ variant }: { variant: MarketingEditorVari
   const activeSavePending = variant === "center" ? saveCenter.isPending : saveBrand.isPending;
 
   const validateRequiredPhotos = (payload: HomepageConfig): boolean => {
-    const missing = missingRequiredMarketingPhotoLabels({
+    const missing = missingRequiredMarketingPhotos({
       config: payload,
       marketingTheme,
       portalMode,
@@ -193,7 +193,7 @@ function BrandMarketingLandingEditor({ variant }: { variant: MarketingEditorVari
     const message = requiredMarketingPhotosMessage(missing);
     setPhotoError(message);
     if (message) {
-      scrollMarketingEditorToBottom();
+      focusMarketingEditorSection(missing[0]!.sectionId);
       return false;
     }
     return true;

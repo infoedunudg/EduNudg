@@ -1,9 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { mergeSparkAcademyLandingConfig } from "./brandLandingDefaults";
 import { DEFAULT_HOMEPAGE_CONFIG } from "./homepageDefaults";
 import {
+  focusMarketingEditorSection,
   listRequiredMarketingPhotos,
   missingRequiredMarketingPhotoLabels,
+  missingRequiredMarketingPhotos,
   requiredMarketingPhotosMessage,
 } from "./marketingRequiredPhotos";
 import { setSectionEnabled, SPARK_ACADEMY_SECTION_DEFAULTS } from "./homepageSections";
@@ -120,12 +122,40 @@ describe("marketingRequiredPhotos", () => {
       meta: { ...DEFAULT_HOMEPAGE_CONFIG.meta, logoUrl: null },
       hero: { ...DEFAULT_HOMEPAGE_CONFIG.hero, backgroundImageUrl: "" },
     };
-    const missing = missingRequiredMarketingPhotoLabels({
+    const missing = missingRequiredMarketingPhotos({
       config,
       marketingTheme: "novu",
       portalMode: "brand",
     });
-    expect(missing).toContain("Site logo");
-    expect(requiredMarketingPhotosMessage(missing)).toMatch(/Upload a photo for:/);
+    expect(missing.map((row) => row.label)).toContain("Site logo");
+    expect(requiredMarketingPhotosMessage(missing)).toMatch(/Upload a photo in:/);
+    expect(requiredMarketingPhotosMessage(missing)).toMatch(/Site → Site logo/);
+  });
+
+  it("regression_required_photo_error_names_editor_section", () => {
+    const config = mergeSparkAcademyLandingConfig("Digitley");
+    const missing = missingRequiredMarketingPhotos({
+      config,
+      marketingTheme: "spark-academy",
+      portalMode: "brand",
+    });
+    const features = missing.find((row) => row.label === "Features image");
+    expect(features?.sectionTitle).toBe("Why us (feature blocks)");
+    expect(features?.sectionId).toBe("featureGrid");
+    const message = requiredMarketingPhotosMessage(missing);
+    expect(message).toMatch(/Why us \(feature blocks\) → Features image/);
+  });
+
+  it("regression_focus_marketing_editor_section_opens_accordion", () => {
+    document.body.innerHTML = `
+      <section data-editor-section="featureGrid">
+        <button type="button" class="ed-editor-accordion__trigger">Why us</button>
+      </section>
+    `;
+    const trigger = document.querySelector(".ed-editor-accordion__trigger") as HTMLButtonElement;
+    const click = vi.fn();
+    trigger.addEventListener("click", click);
+    focusMarketingEditorSection("featureGrid");
+    expect(click).toHaveBeenCalled();
   });
 });
