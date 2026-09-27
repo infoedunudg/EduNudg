@@ -5,6 +5,7 @@ import {
   overlayCenterFoundersFromIdentity,
   overlayCenterLandingIdentity,
   brandPublicFoundersFromLanding,
+  isThemeDefaultFounder,
   publicCenterDisplayName,
   centerPublicCopyright,
 } from "./centerLandingDefaults";
@@ -151,6 +152,96 @@ describe("overlayCenterFoundersFromIdentity", () => {
     expect(overlaid.founders?.[0]?.photoUrl).toBe("https://cdn.example/brand-founder.jpg");
   });
 
+  it("regression_center_site_mentor_photo_shows_on_franchise_public", () => {
+    const config = mergeAbacusClassicCenterLandingConfig("Sample Center", "Smart Brain Abacus", "Pune", {
+      founders: [
+        {
+          roleBadge: "Mentor",
+          name: "Priya Sharma",
+          title: "Lead instructor",
+          bio: "",
+          photoUrl: "https://cdn.example/center-mentor.jpg",
+        },
+      ],
+    });
+    const overlaid = overlayCenterFoundersFromIdentity(config, {
+      ownerName: "Bhavana Soni",
+      photoUrl: "https://cdn.example/bhavana.jpg",
+      displayName: "Shree Samarth Smart Brain Abacus",
+      brandName: "Shree Samarth Smart Brain Abacus",
+      brandFounders: [brandOwner],
+    });
+
+    expect(overlaid.founders?.map((row) => row.name)).toEqual([
+      "Bhavana Soni",
+      "Chetan Bhansali",
+      "Priya Sharma",
+    ]);
+    expect(overlaid.founders?.[1]?.photoUrl).toBe("https://cdn.example/brand-founder.jpg");
+    expect(overlaid.founders?.[2]?.photoUrl).toBe("https://cdn.example/center-mentor.jpg");
+  });
+
+  it("regression_franchise_mentors_keep_homepage_founder_and_center_mentor", () => {
+    const config = mergeAbacusClassicCenterLandingConfig("Sample Center", "Smart Brain Abacus", "Pune", {
+      founders: [
+        {
+          roleBadge: "MENTOR",
+          name: "Raunak Rathi",
+          title: "GP",
+          bio: "",
+          photoUrl: "https://cdn.example/center-raunak.jpg",
+        },
+      ],
+    });
+    const overlaid = overlayCenterFoundersFromIdentity(config, {
+      ownerName: "Gayatri Shankar Pare",
+      photoUrl: "https://cdn.example/gayatri.jpg",
+      displayName: "GP Tutorials & Smart Brain Abacus",
+      brandName: "Smart Brain Abacus",
+      brandFounders: [
+        {
+          roleBadge: "FOUNDER & CEO",
+          name: "Bhavana Soni",
+          title: "Smart Brain Abacus Education Pvt. Ltd.",
+          bio: "",
+          photoUrl: "https://cdn.example/homepage-bhavana.jpg",
+        },
+      ],
+    });
+
+    expect(overlaid.founders?.map((row) => row.name)).toEqual([
+      "Gayatri Shankar Pare",
+      "Bhavana Soni",
+      "Raunak Rathi",
+    ]);
+    expect(overlaid.founders?.[1]?.photoUrl).toBe("https://cdn.example/homepage-bhavana.jpg");
+    expect(overlaid.founders?.[2]?.photoUrl).toBe("https://cdn.example/center-raunak.jpg");
+  });
+
+  it("regression_center_site_placeholder_mentor_falls_back_to_brand", () => {
+    const config = mergeAbacusClassicCenterLandingConfig("Sample Center", "Smart Brain Abacus", "Pune", {
+      founders: [
+        {
+          roleBadge: "FOUNDER",
+          name: "Founder name",
+          title: "Sample Center Education Pvt. Ltd.",
+          bio: "",
+          photoUrl: "https://cdn.example/ignored.jpg",
+        },
+      ],
+    });
+    const overlaid = overlayCenterFoundersFromIdentity(config, {
+      ownerName: "Bhavana Soni",
+      photoUrl: "https://cdn.example/bhavana.jpg",
+      displayName: "Shree Samarth",
+      brandName: "Smart Brain Abacus",
+      brandFounders: [brandOwner],
+    });
+
+    expect(overlaid.founders?.map((row) => row.name)).toEqual(["Bhavana Soni", "Chetan Bhansali"]);
+    expect(overlaid.founders?.[1]?.photoUrl).toBe("https://cdn.example/brand-founder.jpg");
+  });
+
   it("regression_brand_public_founders_use_saved_homepage_mentors", () => {
     const founders = brandPublicFoundersFromLanding("spark-academy", "Shree Samarth Smart Brain Abacus", {
       founders: [
@@ -179,5 +270,17 @@ describe("overlayCenterFoundersFromIdentity", () => {
       ],
     });
     expect(founders).toEqual([]);
+  });
+
+  it("regression_real_name_with_sample_center_title_still_shows", () => {
+    expect(
+      isThemeDefaultFounder({
+        roleBadge: "MENTOR",
+        name: "Raunak Rathi",
+        title: "Sample Center Education Pvt. Ltd.",
+        bio: "",
+        photoUrl: "https://cdn.example/raunak.jpg",
+      })
+    ).toBe(false);
   });
 });

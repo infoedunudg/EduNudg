@@ -10,6 +10,7 @@ import type {
   HomepageTrustCard,
 } from "@/types/homepage";
 import type { MarketingUploadScope } from "@/lib/marketingMediaStorage";
+import { mentorPhotoUploadSubdir } from "@/lib/marketingMediaStorage";
 import type { PortalMode } from "@/lib/portalMode";
 import { isAbacusSectionEnabled, isEduLearnSectionEnabled, isSparkSectionEnabled, setSectionEnabled, ABACUS_CLASSIC_SECTION_DEFAULTS, EDU_LEARN_SECTION_DEFAULTS, SPARK_ACADEMY_SECTION_DEFAULTS, type HomepageSectionKey } from "@/lib/homepageSections";
 import { FooterRichEditorFields } from "@/features/marketing/FooterRichEditorFields";
@@ -390,11 +391,13 @@ export function AbacusClassicEditorForm({
         onEnabledChange={(e) => setSection("founders", e)}
       >
         <EditorSectionNote>
-          {isSpark
-            ? "Same section as the public homepage heading. Enter the real person’s name — template text like Founder name is hidden on the live site."
-            : isEduLearn
-              ? "Same section as the public homepage heading. Role badge, name, and title match Abacus / Spark. Template text like Founder name is hidden on the live site."
-              : "Public site: Leadership. Enter the real person’s name — template text like Founder name is hidden on the live site."}
+          {portalMode === "center"
+            ? "Franchise sites show: franchise owner (if set), then Homepage mentors, then these Center Site mentors. Use a real person name. Homepage and Center Site photos use separate uploads — they will not overwrite each other."
+            : isSpark
+              ? "Same section as the public homepage heading. Enter the real person’s name — template text like Founder name is hidden on the live site."
+              : isEduLearn
+                ? "Same section as the public homepage heading. Role badge, name, and title match Abacus / Spark. Template text like Founder name is hidden on the live site."
+                : "Public site: Leadership. Enter the real person’s name — template text like Founder name is hidden on the live site."}
         </EditorSectionNote>
         <EditorItemList
           onAdd={() => commit({ ...config, founders: [...(config.founders ?? []), emptyFounder()] })}
@@ -408,6 +411,7 @@ export function AbacusClassicEditorForm({
               config={config}
               onChange={onChange}
               uploadScope={uploadScope}
+              uploadSubdir={mentorPhotoUploadSubdir(portalMode, i)}
               onPersist={commitMedia}
               photoRequired={i === 0}
               onRemove={() =>
@@ -945,6 +949,7 @@ function FounderEditor({
   config,
   onChange,
   uploadScope,
+  uploadSubdir,
   onPersist,
   photoRequired = false,
   onRemove,
@@ -954,6 +959,7 @@ function FounderEditor({
   config: HomepageConfig;
   onChange: (c: HomepageConfig) => void;
   uploadScope: MarketingUploadScope;
+  uploadSubdir: string;
   onPersist: (c: HomepageConfig) => void;
   photoRequired?: boolean;
   onRemove: () => void;
@@ -970,7 +976,7 @@ function FounderEditor({
         <Input
           label="Person's name"
           value={TEMPLATE_FOUNDER_NAMES.has(founder.name.trim().toLowerCase()) ? "" : founder.name}
-          placeholder="Shown on the public mentors / leadership section"
+          placeholder="Required — real name shows on the public Mentors section"
           onChange={(v) => update({ name: v })}
         />
         <Input label="Title" value={founder.title} onChange={(v) => update({ title: v })} />
@@ -986,7 +992,7 @@ function FounderEditor({
               })
             }
             mediaType="image"
-            uploadSubdir={`founder-${index}`}
+            uploadSubdir={uploadSubdir}
             uploadScope={uploadScope}
             required={photoRequired}
           />

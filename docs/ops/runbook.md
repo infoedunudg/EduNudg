@@ -224,7 +224,7 @@ See [brand-curriculum-workspace spec](../../openspec/specs/brand-curriculum-work
 - Franchise staff: **Center portal → Settings** (`/app/settings`) — update photo, address, and phone. Sign-in email comes from Google/social auth; public site URL is the center marketing host (no separate website field). Staff cannot add franchise social links here.
 - Center photo storage: `{brand_id}/centers/{center_id}/photo.{ext}` in **`brand-assets`** bucket (PNG/JPEG/WebP/GIF, **5 MB** max — client rejects oversized files and shows the error next to Save).
 - Changes appear on the center public site (`{center}.{brand}.localhost:9000`) via `get_center_landing_public`.
-- Mentors: franchiser (Franchise Identity name + master photo) first when present; brand homepage founder always remains (`brand_founders` from migration `083`).
+- Mentors: franchiser (Franchise Identity name + master photo) first when present; then Center Site mentors when customized; else brand homepage founder (`brand_founders` from migration `083`). Placeholders like **Founder name** never show even with a photo.
 - Footer social icons on the **center** site use brand Homepage → Social Media Connect, not `franchise_centers.social_links`.
 - Footer address/phone on the **center** site (Novu, Abacus, Spark) use Franchise Management Location & Contact — not brand Head office.
 

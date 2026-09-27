@@ -28,6 +28,15 @@ export function curriculumProgramMediaSubdir(programId: string): string {
   return `program-marketing/${id}`;
 }
 
+/** Storage folder for mentor photos — brand Homepage and Center Site must not share a slot. */
+export function mentorPhotoUploadSubdir(
+  portalMode: "brand" | "center" | "platform" | "learn" | string,
+  index: number
+): string {
+  const slot = Math.max(0, Math.floor(index));
+  return portalMode === "center" ? `center-founder-${slot}` : `founder-${slot}`;
+}
+
 /** Draft slot while adding a course, before `programs.id` exists. */
 export function newCurriculumProgramMediaSlotId(): string {
   return crypto.randomUUID();

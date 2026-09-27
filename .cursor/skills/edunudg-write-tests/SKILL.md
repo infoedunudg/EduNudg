@@ -61,7 +61,7 @@ Center public footer contact: `regression_center_footer_contact_uses_franchise_p
 
 Center public footer name: `regression_center_footer_replaces_sample_center_placeholder_with_franchise_name` and `regression_center_public_footer_uses_franchise_name_not_sample_center` — never show editor placeholder **Sample Center** on a live center host.
 
-Center public mentors: `regression_center_mentors_show_franchiser_first_then_brand_founder` and `regression_center_mentors_brand_owner_first_when_franchiser_missing` — franchiser card first when Franchise Identity has an owner/photo; brand founder always remains; brand owner is first when the franchiser is missing (`regression_center_public_mentors_use_franchiser_then_brand_founder`).
+Center public mentors: `regression_center_mentors_show_franchiser_first_then_brand_founder` — franchiser first; Homepage + Center Site mentors both show (`regression_franchise_mentors_keep_homepage_founder_and_center_mentor`). Mentor photos must not share Storage (`regression_center_and_homepage_mentor_photos_use_separate_storage_slots`).
 
 Center/brand public testimonials: published `brand_success_stories` only — hide `#testimonials` (and dummy Spark quotes) when the brand has none (`regression_center_hides_dummy_testimonials_when_brand_has_no_stories`, `regression_center_shows_brand_success_stories_on_homepage`, `regression_brand_hides_dummy_testimonials_when_no_published_stories`, `regression_spark_omits_testimonials_when_no_public_stories`).
 
