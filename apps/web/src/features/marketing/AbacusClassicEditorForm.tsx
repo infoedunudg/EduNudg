@@ -379,15 +379,21 @@ export function AbacusClassicEditorForm({
 
       <EditorAccordion
         sectionId="founders"
-        title={isCurriculumCoursesTheme ? "Mentors / Leadership" : "Leadership profiles"}
+        title={
+          isSpark
+            ? "Meet Our Expert Mentors"
+            : isEduLearn
+              ? "Meet our leadership"
+              : "Leadership profiles"
+        }
         enabled={isThemeSectionEnabled("founders")}
         onEnabledChange={(e) => setSection("founders", e)}
       >
         <EditorSectionNote>
           {isSpark
-            ? "Public site: Meet Our Expert Mentors. Enter the real person’s name — template text like Founder name is hidden on the live site."
+            ? "Same section as the public homepage heading. Enter the real person’s name — template text like Founder name is hidden on the live site."
             : isEduLearn
-              ? "Public site: Meet our leadership. Role badge, name, and title match Abacus / Spark. Template text like Founder name is hidden on the live site."
+              ? "Same section as the public homepage heading. Role badge, name, and title match Abacus / Spark. Template text like Founder name is hidden on the live site."
               : "Public site: Leadership. Enter the real person’s name — template text like Founder name is hidden on the live site."}
         </EditorSectionNote>
         <EditorItemList
@@ -964,7 +970,7 @@ function FounderEditor({
         <Input
           label="Person's name"
           value={TEMPLATE_FOUNDER_NAMES.has(founder.name.trim().toLowerCase()) ? "" : founder.name}
-          placeholder="Shown on public Mentors / Leadership"
+          placeholder="Shown on the public mentors / leadership section"
           onChange={(v) => update({ name: v })}
         />
         <Input label="Title" value={founder.title} onChange={(v) => update({ title: v })} />

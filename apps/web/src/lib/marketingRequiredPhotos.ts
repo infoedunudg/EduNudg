@@ -24,7 +24,7 @@ export const MARKETING_EDITOR_SECTION_TITLES: Record<string, string> = {
   site: "Site",
   hero: "Hero",
   featureGrid: "Why us (feature blocks)",
-  founders: "Mentors / Leadership",
+  founders: "Meet Our Expert Mentors",
   upcomingEvents: "Upcoming events",
   about: "About Us",
   trustMedia: "Trust & video",
@@ -34,7 +34,14 @@ export const MARKETING_EDITOR_SECTION_TITLES: Record<string, string> = {
   featureScroll: "Feature sections (phone blocks)",
 };
 
-function sectionTitle(sectionId: string): string {
+function foundersSectionTitle(theme: MarketingTheme): string {
+  if (theme === "spark-academy") return "Meet Our Expert Mentors";
+  if (theme === "edu-learn") return "Meet our leadership";
+  return "Leadership profiles";
+}
+
+function sectionTitle(sectionId: string, theme?: MarketingTheme): string {
+  if (sectionId === "founders" && theme) return foundersSectionTitle(theme);
   return MARKETING_EDITOR_SECTION_TITLES[sectionId] ?? sectionId;
 }
 
@@ -94,7 +101,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "founder-0",
       sectionId: "founders",
-      sectionTitle: sectionTitle("founders"),
+      sectionTitle: sectionTitle("founders", marketingTheme),
       label: "Photo",
       filled: hasMediaUrl(config.founders?.[0]?.photoUrl),
     });
