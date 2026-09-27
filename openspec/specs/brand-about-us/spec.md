@@ -104,25 +104,26 @@ AND footer column labels stay small uppercase chrome (not section titles)
 
 ### Mentors / Leadership editor seeds one example profile
 
-Brand Homepage **Mentors / Leadership** (`landing.founders`) SHALL seed a single dummy profile so staff can see how to fill a card. Spark Academy SHALL NOT pre-fill five Unsplash stock mentors. Add, update, and delete of mentor cards SHALL remain available. Saved custom names/photos SHALL be kept. Extra leftover Spark Unsplash stock cards MAY collapse to one example on load.
+Brand Homepage mentors accordion (`landing.founders`) SHALL use the same title as the public section for that theme: Spark **Meet Our Expert Mentors**, EduLearn **Meet our leadership**, Abacus **Leadership profiles**. It SHALL seed a single dummy profile so staff can see how to fill a card. Spark Academy SHALL NOT pre-fill five Unsplash stock mentors. Add, update, and delete of mentor cards SHALL remain available. Saved custom names/photos SHALL be kept. Extra leftover Spark Unsplash stock cards MAY collapse to one example on load.
 
 - **GIVEN** a Spark Academy brand with no saved mentors, or only leftover Unsplash stock names
-- **WHEN** brand staff open `/app/homepage` Mentors / Leadership
+- **WHEN** brand staff open `/app/homepage` **Meet Our Expert Mentors**
 - **THEN** they see one example profile
 - **AND** they can still add, edit, or delete mentor cards
+- **AND** the accordion title matches the public heading (`regression_spark_homepage_mentors_accordion_matches_public_heading`)
 
 ### Spark Academy mentors show role badge and title
 
 Spark Academy **Meet Our Expert Mentors** SHALL render the same Homepage founder fields as Abacus Classic leadership: **Role badge** (`roleBadge`, e.g. FOUNDER & CEO) and **Title** (`title`, e.g. company name) together. The card SHALL NOT hide the role badge when title is filled.
 
-- **GIVEN** a Spark Academy public homepage whose Mentors / Leadership profile has role badge `FOUNDER & CEO`, name, and title company name
+- **GIVEN** a Spark Academy public homepage whose mentor profile has role badge `FOUNDER & CEO`, name, and title company name
 - **WHEN** a visitor views **Meet Our Expert Mentors**
 - **THEN** the card shows the role badge, the person’s name, and the title
 - **AND** it does not replace the role badge with the title
 
 ### EduLearn leadership shows role badge and title
 
-EduLearn public sites SHALL render Homepage **Mentors / Leadership** (`landing.founders`) at `#founders` with the same fields as Abacus and Spark: role badge, name, and title.
+EduLearn public sites SHALL render Homepage **Meet our leadership** (`landing.founders`) at `#founders` with the same fields as Abacus and Spark: role badge, name, and title. The Homepage accordion SHALL use the same title (`regression_edu_learn_homepage_mentors_accordion_matches_public_heading`).
 
 - **GIVEN** an EduLearn public homepage whose Leadership profile has role badge `FOUNDER & CEO`, name, and title company name
 - **WHEN** a visitor views **Meet our leadership**

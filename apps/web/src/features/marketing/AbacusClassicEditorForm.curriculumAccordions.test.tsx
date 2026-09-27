@@ -35,4 +35,32 @@ describe("AbacusClassicEditorForm curriculum accordions", () => {
       expect(screen.getByText("Site")).toBeDefined();
     },
   );
+
+  it("regression_spark_homepage_mentors_accordion_matches_public_heading", () => {
+    render(
+      <AbacusClassicEditorForm
+        config={mergeSparkAcademyLandingConfig("Spark")}
+        marketingTheme="spark-academy"
+        portalMode="brand"
+        onChange={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText("Meet Our Expert Mentors")).toBeDefined();
+    expect(screen.queryByText("Mentors / Leadership")).toBeNull();
+  });
+
+  it("regression_edu_learn_homepage_mentors_accordion_matches_public_heading", () => {
+    render(
+      <AbacusClassicEditorForm
+        config={mergeEduLearnLandingConfig("EduLearn")}
+        marketingTheme="edu-learn"
+        portalMode="brand"
+        onChange={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText("Meet our leadership")).toBeDefined();
+    expect(screen.queryByText("Mentors / Leadership")).toBeNull();
+  });
 });

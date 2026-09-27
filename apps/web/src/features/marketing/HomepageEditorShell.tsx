@@ -55,7 +55,7 @@ export const HOMEPAGE_EDITOR_SECTION_META: Record<string, EditorSectionMeta> = {
   faq: { icon: "help", tone: "neutral", description: "Common questions and answers" },
   privacyFooter: { icon: "shield", tone: "secondary", description: "Legal disclosures and footer layout" },
   featureGrid: { icon: "grid_view", tone: "secondary", description: "Why us feature blocks" },
-  founders: { icon: "groups", tone: "primary", description: "Mentors / Leadership" },
+  founders: { icon: "groups", tone: "primary", description: "Public mentors / leadership section" },
   upcomingEvents: { icon: "event", tone: "secondary", description: "Competitions, workshops, and demos" },
   about: { icon: "info", tone: "primary", description: "Company story, features, and team photos" },
   trustMedia: { icon: "play_circle", tone: "primary", description: "Trust stats and video" },
