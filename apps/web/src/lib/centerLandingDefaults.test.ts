@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildCenterLandingConfig,
   mergeAbacusClassicCenterLandingConfig,
+  mergeSparkAcademyCenterLandingConfig,
+  mergeEduLearnCenterLandingConfig,
   overlayCenterFoundersFromIdentity,
   overlayCenterLandingIdentity,
   brandPublicFoundersFromLanding,
@@ -282,5 +284,54 @@ describe("overlayCenterFoundersFromIdentity", () => {
         photoUrl: "https://cdn.example/raunak.jpg",
       })
     ).toBe(false);
+  });
+});
+
+const CENTER_UPCOMING_EVENTS_PARTIAL = {
+  upcomingEvents: {
+    eyebrow: "EVENTS",
+    title: "Franchise workshops",
+    items: [
+      {
+        type: "workshop" as const,
+        title: "Open house",
+        startDate: "2026-12-15",
+        description: "Meet the team",
+        location: "Pune",
+        imageUrl: "https://example.supabase.co/storage/v1/object/public/brand-assets/brand-1/marketing/center-event-0/asset.jpg",
+        ctaLabel: "Book",
+        ctaHref: "enroll",
+      },
+    ],
+  },
+  sections: { upcomingEvents: true },
+};
+
+describe("center landing upcoming events", () => {
+  it("regression_center_landing_keeps_upcoming_event_cover_on_franchise_merge", () => {
+    const spark = mergeSparkAcademyCenterLandingConfig(
+      "Smart Brain Pune",
+      "Smart Brain Abacus",
+      "Pune",
+      CENTER_UPCOMING_EVENTS_PARTIAL
+    );
+    const abacus = mergeAbacusClassicCenterLandingConfig(
+      "Smart Brain Pune",
+      "Smart Brain Abacus",
+      "Pune",
+      CENTER_UPCOMING_EVENTS_PARTIAL
+    );
+    const edu = mergeEduLearnCenterLandingConfig(
+      "Smart Brain Pune",
+      "Smart Brain Abacus",
+      "Pune",
+      CENTER_UPCOMING_EVENTS_PARTIAL
+    );
+
+    for (const config of [spark, abacus, edu]) {
+      expect(config.upcomingEvents?.items?.[0]?.title).toBe("Open house");
+      expect(config.upcomingEvents?.items?.[0]?.imageUrl).toContain("center-event-0");
+      expect(config.sections?.upcomingEvents).toBe(true);
+    }
   });
 });

@@ -59,7 +59,7 @@ Center/franchise **Mentors** (`#founders`): franchiser (Franchise Identity name 
 
 **Franchise apply is brand-only:** center public layouts run `sanitizeCenterPublicNavConfig()` so **Apply franchise** / `#apply` secondary CTAs never appear on center hosts (Vercel `?portal=center` or `{center}.{brand}.localhost`). Brand landings keep dual CTAs.
 
-**Upcoming events:** Homepage editor section (like Leadership profiles). Brand adds competitions / workshops / demos with optional image, date, time, duration. Public `#events` shows only upcoming items (capped by `maxItems`). Works on Abacus, Spark, EduLearn, and Novu brand themes.
+**Upcoming events:** Homepage and **Center Site Configuration** editors. Brand/center add competitions / workshops / demos with optional image, date, time, duration. Public `#events` shows only upcoming items (capped by `maxItems`). Franchise sites read `center_landing.upcomingEvents`. Homepage and Center Site event covers use separate Storage folders (`event-N` vs `center-event-N`) so photos do not overwrite each other. Works on Abacus, Spark, EduLearn, and Novu themes. Regressions: `regression_center_landing_keeps_upcoming_event_cover_on_franchise_merge`, `regression_center_and_homepage_event_photos_use_separate_storage_slots`.
 
 **Trust & video YouTube:** Abacus Classic embeds in `#trust`. Spark Academy keeps the Journey highlight photo and adds a 16:9 embed under `#journey` (`#trust`) when `trustMedia.youtubeUrl` is set (`regression_spark_journey_renders_youtube_below_photo`). EduLearn does the same under Why choose us. Shorts URLs convert to embed (`regression_youtube_shorts_url_converts_to_embed`).
 

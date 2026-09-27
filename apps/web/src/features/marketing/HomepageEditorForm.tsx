@@ -856,6 +856,7 @@ export function HomepageEditorForm({
           commit={commit}
           commitMedia={commitMedia}
           uploadScope={uploadScope}
+          portalMode={portalMode}
         />
       </EditorAccordion>
       ) : null}

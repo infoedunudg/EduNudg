@@ -29,6 +29,7 @@ Bucket: `brand-assets` (`platform/marketing/…`, `{brandId}/marketing/…`, log
 - Curriculum Course Banner uploads MUST use `program-marketing/{programId}` (draft UUID while adding). Never a shared `{brandId}/marketing/program-marketing/asset.*` for every course.
 - Curriculum Course Banner size rejections MUST show a visible danger card under the dropzone (bubble via `onError` when the file input is hidden).
 - Brand Homepage / Center Site required-photo save errors MUST name the editor accordion (e.g. `Why us (feature blocks) → Features image`) and open that section.
+- Homepage vs Center Site mentor photos MUST use separate Storage slots (`founder-N` vs `center-founder-N`). Upcoming event covers MUST use `event-N` vs `center-event-N`. Never share those folders across editors.
 - Center public footers use brand `social_connect` (Homepage Social Media Connect), not `franchise_centers.social_links`.
 
 ## MUST NOT
