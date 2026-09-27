@@ -5,6 +5,7 @@ import {
   MARKETING_IMAGE_MAX_BYTES,
   assertMarketingImageUploadSize,
   curriculumProgramMediaSubdir,
+  mentorPhotoUploadSubdir,
   newCurriculumProgramMediaSlotId,
 } from "./marketingMediaStorage";
 
@@ -92,5 +93,25 @@ describe("assertMarketingImageUploadSize", () => {
     expect(() => assertMarketingImageUploadSize(oversized)).toThrow(/5 MB or smaller/);
     const ok = new File(["x"], "banner.png", { type: "image/png" });
     expect(() => assertMarketingImageUploadSize(ok)).not.toThrow();
+  });
+});
+
+describe("mentorPhotoUploadSubdir", () => {
+  it("regression_center_and_homepage_mentor_photos_use_separate_storage_slots", () => {
+    expect(mentorPhotoUploadSubdir("brand", 0)).toBe("founder-0");
+    expect(mentorPhotoUploadSubdir("center", 0)).toBe("center-founder-0");
+    const brandPath = marketingMediaObjectPath(
+      { kind: "brand", brandId: "brand-1" },
+      mentorPhotoUploadSubdir("brand", 0),
+      new File(["x"], "a.jpg", { type: "image/jpeg" })
+    );
+    const centerPath = marketingMediaObjectPath(
+      { kind: "brand", brandId: "brand-1" },
+      mentorPhotoUploadSubdir("center", 0),
+      new File(["x"], "b.jpg", { type: "image/jpeg" })
+    );
+    expect(brandPath).toBe("brand-1/marketing/founder-0/asset.jpg");
+    expect(centerPath).toBe("brand-1/marketing/center-founder-0/asset.jpg");
+    expect(brandPath).not.toBe(centerPath);
   });
 });

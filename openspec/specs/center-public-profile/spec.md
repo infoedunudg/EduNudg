@@ -116,10 +116,22 @@ On a **center** host, Novu, Abacus Classic, and Spark Academy footers SHALL show
 
 - **GIVEN** Franchise Identity has a center owner name or master photo
 - **AND** the brand homepage has a founder profile
+- **AND** Center Site mentors are still placeholders only
 - **WHEN** a visitor opens that center’s public site
 - **THEN** Mentors / Leadership lists the franchiser first
 - **AND** the brand founder remains on the page after the franchiser
 - **AND** Center sites placeholders such as **Founder name** / **Sample Center** are not shown, even when a photo was uploaded for that template row
+
+#### Scenario: Center Site mentors appear on franchise when customized
+
+- **GIVEN** Center Site Configuration has a mentor with a real name and photo (not **Founder name**)
+- **AND** brand Homepage has a founder profile
+- **AND** Franchise Identity has a center owner
+- **WHEN** a visitor opens that franchise public site
+- **THEN** Mentors lists the franchiser first
+- **AND** then the Homepage founder
+- **AND** then the Center Site mentor (separate photo — not overwriting Homepage Storage)
+- **AND** regressions `regression_franchise_mentors_keep_homepage_founder_and_center_mentor` and `regression_center_and_homepage_mentor_photos_use_separate_storage_slots` stay green
 
 #### Scenario: Mentors fall back to brand owner first
 

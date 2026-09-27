@@ -105,16 +105,28 @@ export function parseHomepageFounders(raw: unknown): HomepageFounderProfile[] {
 
 export function isThemeDefaultFounder(founder: HomepageFounderProfile): boolean {
   const name = founder.name.trim().toLowerCase();
-  const title = founder.title ?? "";
   if (!name || name === "founder name" || name === "name") return true;
   if (name === CENTER_LANDING_EDITOR_PLACEHOLDER_NAME.toLowerCase()) return true;
-  if (title.includes(CENTER_LANDING_EDITOR_PLACEHOLDER_NAME)) return true;
+  // Stock Spark mentors only when still on Unsplash stock art — a replaced photo keeps the card.
   if (SPARK_STOCK_FOUNDER_NAMES.has(name) && founder.photoUrl.includes("unsplash.com")) return true;
   return false;
 }
 
 export function visiblePublicFounders(founders?: HomepageFounderProfile[]): HomepageFounderProfile[] {
   return (founders ?? []).filter((row) => !isThemeDefaultFounder(row));
+}
+
+/** Keep first occurrence of each person name (case-insensitive). */
+export function uniqueFoundersByName(founders: HomepageFounderProfile[]): HomepageFounderProfile[] {
+  const out: HomepageFounderProfile[] = [];
+  const seen = new Set<string>();
+  for (const row of founders) {
+    const key = row.name.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+  }
+  return out;
 }
 
 /** Same mentor list the brand public homepage uses, minus Center sites placeholders. */
@@ -165,7 +177,7 @@ function sameFounderName(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
 
-/** Center public mentors: franchiser first when present; brand homepage founders always follow (first is brand owner if no franchiser). */
+/** Center public mentors: franchiser first, then brand Homepage mentors, then Center Site mentors. */
 export function overlayCenterFoundersFromIdentity(
   config: HomepageConfig,
   identity: CenterFounderIdentity
@@ -173,14 +185,17 @@ export function overlayCenterFoundersFromIdentity(
   const ownerName = identity.ownerName.trim();
   const photoUrl = identity.photoUrl?.trim() || "";
   const brandFounders = (identity.brandFounders ?? []).filter((row) => !isThemeDefaultFounder(row));
+  const centerFounders = visiblePublicFounders(config.founders);
+  // Both lists stay — Center Site must not hide Homepage founders (or share their photos).
+  const baseFounders = uniqueFoundersByName([...brandFounders, ...centerFounders]);
 
   if (!hasCenterFranchiserIdentity(identity)) {
-    return { ...config, founders: brandFounders };
+    return { ...config, founders: baseFounders };
   }
 
   const name =
     ownerName ||
-    brandFounders[0]?.name ||
+    baseFounders[0]?.name ||
     publicCenterDisplayName(ownerName, identity.displayName) ||
     identity.brandName;
   const franchiser: HomepageFounderProfile = {
@@ -190,7 +205,7 @@ export function overlayCenterFoundersFromIdentity(
     bio: "",
     photoUrl,
   };
-  const rest = brandFounders.filter((row) => !sameFounderName(row.name, name));
+  const rest = baseFounders.filter((row) => !sameFounderName(row.name, name));
   return { ...config, founders: [franchiser, ...rest] };
 }
 
