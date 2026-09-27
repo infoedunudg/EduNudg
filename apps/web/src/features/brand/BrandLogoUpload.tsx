@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { MutationError } from "@edunudg/ui";
 import { uploadBrandSiteLogo } from "@/lib/brandLandingEditorApi";
 import { invalidateBrandLogoCaches } from "@/lib/brandLogoCache";
 
@@ -104,11 +105,7 @@ export function BrandLogoUpload({
           Recommended: SVG or 512×512 PNG
         </p>
         {!brandId ? <p className="ed-text-sm ed-muted">Create the brand first, then upload a logo.</p> : null}
-        {localError ? (
-          <p className="ed-text-sm" role="alert">
-            {localError}
-          </p>
-        ) : null}
+        <MutationError message={localError} />
       </div>
     );
   }
@@ -137,11 +134,7 @@ export function BrandLogoUpload({
         <p className="ed-text-sm ed-muted">Create the brand first, then upload a logo.</p>
       ) : null}
       {pending ? <p className="ed-text-sm ed-muted">Uploading…</p> : null}
-      {localError ? (
-        <p className="ed-text-sm" role="alert">
-          {localError}
-        </p>
-      ) : null}
+      <MutationError message={localError} />
     </div>
   );
 }

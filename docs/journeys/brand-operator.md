@@ -9,7 +9,7 @@ Brand staff use `http://{brand}.localhost:9000/app/*`.
 | Home | Compact KPI grid: unassigned leads, stale leads, new franchise applications |
 | **Student Leads** | Assign, reallocate, view lost with reasons |
 | **Franchise Applications** | Approve/reject; Add Franchise modal; provisions center + domain |
-| Franchise Centers | Master-detail `/app/centers` — profile (no Social Media), open frontend/backend, disable/enable, delete, curriculum, **Import Franchise** CSV/Excel, **Export Franchise** |
+| Franchise Centers | Master-detail `/app/centers` — profile (no Social Media), open frontend/backend, disable/enable, delete, curriculum, **Import Franchise** CSV/Excel, **Export Franchise**; **Save Changes** stays sticky at the bottom while scrolling |
 | **Students** | Master-detail `/app/students` — same chrome as Franchise Management; search by student, franchise, or city; read-only contact + curriculum levels; **Export CSV** downloads the full roster |
 | Curriculum | Master-detail `/app/curriculum` — pipeline header + Active/Drafts/Programs/Total KPIs; courses/levels/units; on/off toggle in course detail header (mobile **Edit course** overlay includes the same controls); parent marketing stays editable after create |
 | Merchandise | Catalog, promos, payment settings, and franchise orders — pipeline header + Active/Draft/Orders/Total KPIs; each tab is list + detail |

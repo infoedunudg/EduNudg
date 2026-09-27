@@ -27,6 +27,7 @@ Bucket: `brand-assets` (`platform/marketing/…`, `{brandId}/marketing/…`, log
 - Theme switch updates `brands.marketing_theme` only — do not clear landing JSON.
 - Keep `regression_*` coverage for platform + brand/center media preservation.
 - Curriculum Course Banner uploads MUST use `program-marketing/{programId}` (draft UUID while adding). Never a shared `{brandId}/marketing/program-marketing/asset.*` for every course.
+- Curriculum Course Banner size rejections MUST show a visible danger card under the dropzone (bubble via `onError` when the file input is hidden).
 - Center public footers use brand `social_connect` (Homepage Social Media Connect), not `franchise_centers.social_links`.
 
 ## MUST NOT

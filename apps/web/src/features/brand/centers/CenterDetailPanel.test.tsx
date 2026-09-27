@@ -56,7 +56,17 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 vi.mock("@/features/center/settings/CenterPhotoUpload", () => ({
-  CenterPhotoUpload: () => <div data-testid="center-photo-upload">Photo</div>,
+  CenterPhotoUpload: ({
+    onError,
+  }: {
+    onError?: (message: string | null) => void;
+  }) => (
+    <div data-testid="center-photo-upload">
+      <button type="button" onClick={() => onError?.("Image must be 5 MB or smaller.")}>
+        Simulate oversized photo
+      </button>
+    </div>
+  ),
 }));
 
 const center: BrandCenterRow = {
@@ -288,5 +298,29 @@ describe("CenterDetailPanel franchise login credentials", () => {
       expect(softDeleteFranchiseCenter).toHaveBeenCalledWith("center-arti", "")
     );
     expect(onDeleted).toHaveBeenCalled();
+  });
+
+  it("regression_franchise_photo_error_shows_near_save_button", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderPanel();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Simulate oversized photo" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toMatch(/5 MB or smaller/);
+    const save = screen.getByRole("button", { name: "Save Changes" });
+    expect(alert.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "nearest" });
+    });
+  });
+
+  it("regression_franchise_save_actions_stay_sticky_while_scrolling", async () => {
+    renderPanel();
+    const save = await screen.findByRole("button", { name: "Save Changes" });
+    const sticky = screen.getByTestId("franchise-sticky-save");
+    expect(sticky.className).toContain("ed-brand-centers__sticky-actions");
+    expect(sticky.contains(save)).toBe(true);
   });
 });

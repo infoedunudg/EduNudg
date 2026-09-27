@@ -214,6 +214,7 @@ See [merchandise spec](../spec/merchandise.md).
 - Do **not** reuse a brand-wide `program-marketing/asset.*` slot — that overwrites every course that pointed at the same file.
 - Existing `marketing_image_url` values keep working; a new upload writes a new per-course object and **Save** updates only that course. Preview Video stays a URL field.
 - If a saved banner file is missing, Course Banner still shows the empty dropzone plus **Upload image** (do not hide the picker behind a zero-height broken `<img>`).
+- PNG/JPEG/WebP/GIF, **5 MB** max — oversized **Replace image** / **Upload image** shows a highlighted danger card under the banner (the file input is hidden behind the dropzone, so errors must bubble there — not stay silent).
 
 See [brand-curriculum-workspace spec](../../openspec/specs/brand-curriculum-workspace/spec.md).
 
@@ -221,7 +222,7 @@ See [brand-curriculum-workspace spec](../../openspec/specs/brand-curriculum-work
 
 - Apply migration `046_center_public_profile.sql`: `supabase db push`
 - Franchise staff: **Center portal → Settings** (`/app/settings`) — update photo, address, and phone. Sign-in email comes from Google/social auth; public site URL is the center marketing host (no separate website field). Staff cannot add franchise social links here.
-- Center photo storage: `{brand_id}/centers/{center_id}/photo.{ext}` in **`brand-assets`** bucket.
+- Center photo storage: `{brand_id}/centers/{center_id}/photo.{ext}` in **`brand-assets`** bucket (PNG/JPEG/WebP/GIF, **5 MB** max — client rejects oversized files and shows the error next to Save).
 - Changes appear on the center public site (`{center}.{brand}.localhost:9000`) via `get_center_landing_public`.
 - Mentors: franchiser (Franchise Identity name + master photo) first when present; brand homepage founder always remains (`brand_founders` from migration `083`).
 - Footer social icons on the **center** site use brand Homepage → Social Media Connect, not `franchise_centers.social_links`.

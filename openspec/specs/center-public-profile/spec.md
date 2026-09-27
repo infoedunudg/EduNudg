@@ -42,6 +42,13 @@ Franchise staff SHALL upload a center photo stored in the `brand-assets` bucket 
 - **THEN** `photo_url` is saved on the center record
 - **AND** the photo appears on the center public landing page
 
+#### Scenario: Oversized photo error near Save
+
+- **WHEN** center staff upload a photo larger than 5 MB
+- **THEN** the client rejects the upload with a clear size message before Storage
+- **AND** the error is shown next to **Save profile** / **Save Changes** in a highlighted danger card, not only at the top of the form as plain text
+- **AND** regressions `regression_center_photo_rejects_images_over_5mb`, `regression_franchise_photo_error_shows_near_save_via_onError`, and `regression_mutation_error_uses_highlighted_danger_card` stay green
+
 ### Requirement: Social links RPC validation
 
 The RPC SHALL still accept `social_links` as a JSON array of `{platform, url}` with at most six entries when a save pass-through sends the existing column. Center Settings SHALL NOT collect new links.

@@ -64,4 +64,14 @@ describe("centerPhotoStorage", () => {
       expect.objectContaining({ upsert: true })
     );
   });
+
+  it("regression_center_photo_rejects_images_over_5mb", async () => {
+    const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.png", {
+      type: "image/png",
+    });
+    await expect(uploadCenterPhoto("brand-1", "center-1", oversized)).rejects.toThrow(
+      /5 MB or smaller/
+    );
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
 });

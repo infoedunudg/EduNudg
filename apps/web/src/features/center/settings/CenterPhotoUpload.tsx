@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { MutationError } from "@edunudg/ui";
 import { uploadCenterPhoto } from "@/lib/centerPhotoStorage";
+import { MARKETING_IMAGE_MAX_MB } from "@/lib/marketingMediaStorage";
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 
@@ -8,6 +10,8 @@ type Props = {
   centerId: string;
   currentPhotoUrl?: string | null;
   onUploaded: (url: string) => void;
+  /** Bubble upload failures so parent forms can show them next to Save. */
+  onError?: (message: string | null) => void;
   disabled?: boolean;
   variant?: "desktop" | "mobile";
 };
@@ -17,6 +21,7 @@ export function CenterPhotoUpload({
   centerId,
   currentPhotoUrl,
   onUploaded,
+  onError,
   disabled,
   variant = "desktop",
 }: Props) {
@@ -30,18 +35,24 @@ export function CenterPhotoUpload({
     setPreview(currentPhotoUrl?.trim() || "");
   }, [currentPhotoUrl]);
 
+  const reportError = (message: string | null) => {
+    setLocalError(message);
+    onError?.(message);
+  };
+
   const handleChange = async (file: File | undefined) => {
     if (!file) return;
-    setLocalError(null);
+    reportError(null);
     setPending(true);
     try {
       const url = await uploadCenterPhoto(brandId, centerId, file);
       setPreview(url);
       onUploaded(url);
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Photo upload failed");
+      reportError(err instanceof Error ? err.message : "Photo upload failed");
     } finally {
       setPending(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -97,15 +108,14 @@ export function CenterPhotoUpload({
           Update Center Photo
         </button>
       ) : (
-        <p className="ed-text-sm ed-muted">Center master photo shown on your public site.</p>
+        <p className="ed-text-sm ed-muted">
+          Center master photo shown on your public site. PNG, JPEG, WebP, or GIF. Maximum {MARKETING_IMAGE_MAX_MB}{" "}
+          MB.
+        </p>
       )}
 
       {pending ? <p className="ed-text-sm ed-muted">Uploading…</p> : null}
-      {localError ? (
-        <p className="ed-text-sm" role="alert">
-          {localError}
-        </p>
-      ) : null}
+      <MutationError message={localError} />
     </div>
   );
 }
