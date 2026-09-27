@@ -1,6 +1,8 @@
 import { Input } from "@edunudg/ui";
 import type { HomepageConfig, HomepageEventType, HomepageUpcomingEvent } from "@/types/homepage";
 import type { MarketingUploadScope } from "@/lib/marketingMediaStorage";
+import { eventPhotoUploadSubdir } from "@/lib/marketingMediaStorage";
+import type { PortalMode } from "@/lib/portalMode";
 import {
   emptyUpcomingEvent,
   emptyUpcomingEventsSection,
@@ -21,6 +23,7 @@ type Props = {
   commit: (config: HomepageConfig) => void;
   commitMedia: (config: HomepageConfig) => void;
   uploadScope: MarketingUploadScope;
+  portalMode?: PortalMode;
 };
 
 export function UpcomingEventsEditorFields({
@@ -29,6 +32,7 @@ export function UpcomingEventsEditorFields({
   commit,
   commitMedia,
   uploadScope,
+  portalMode = "brand",
 }: Props) {
   const section = config.upcomingEvents ?? emptyUpcomingEventsSection();
 
@@ -38,6 +42,9 @@ export function UpcomingEventsEditorFields({
         Competitions, workshops, demos, and other events. Only upcoming dates (today or later) appear on the
         public homepage. The first event cover image is required; later covers, time, and duration are optional.
         Set max items to limit how many show.
+        {portalMode === "center"
+          ? " Center Site covers use a separate upload slot from Homepage — they will not overwrite each other."
+          : null}
       </EditorSectionNote>
       <EditorFieldsGrid>
         <Input
@@ -92,6 +99,7 @@ export function UpcomingEventsEditorFields({
             config={config}
             onChange={onChange}
             uploadScope={uploadScope}
+            portalMode={portalMode}
             onPersist={commitMedia}
             imageRequired={i === 0}
             onRemove={() =>
@@ -116,6 +124,7 @@ function UpcomingEventEditorItem({
   config,
   onChange,
   uploadScope,
+  portalMode,
   onPersist,
   imageRequired = false,
   onRemove,
@@ -125,6 +134,7 @@ function UpcomingEventEditorItem({
   config: HomepageConfig;
   onChange: (c: HomepageConfig) => void;
   uploadScope: MarketingUploadScope;
+  portalMode: PortalMode;
   onPersist: (c: HomepageConfig) => void;
   imageRequired?: boolean;
   onRemove: () => void;
@@ -222,7 +232,7 @@ function UpcomingEventEditorItem({
             value={event.imageUrl ?? ""}
             onChange={(imageUrl) => persist({ imageUrl: imageUrl || undefined })}
             mediaType="image"
-            uploadSubdir={`event-${index}`}
+            uploadSubdir={eventPhotoUploadSubdir(portalMode, index)}
             uploadScope={uploadScope}
             layout="hero"
             required={imageRequired}

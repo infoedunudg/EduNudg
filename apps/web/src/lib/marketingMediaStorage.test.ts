@@ -6,6 +6,7 @@ import {
   assertMarketingImageUploadSize,
   curriculumProgramMediaSubdir,
   mentorPhotoUploadSubdir,
+  eventPhotoUploadSubdir,
   newCurriculumProgramMediaSlotId,
 } from "./marketingMediaStorage";
 
@@ -112,6 +113,26 @@ describe("mentorPhotoUploadSubdir", () => {
     );
     expect(brandPath).toBe("brand-1/marketing/founder-0/asset.jpg");
     expect(centerPath).toBe("brand-1/marketing/center-founder-0/asset.jpg");
+    expect(brandPath).not.toBe(centerPath);
+  });
+});
+
+describe("eventPhotoUploadSubdir", () => {
+  it("regression_center_and_homepage_event_photos_use_separate_storage_slots", () => {
+    expect(eventPhotoUploadSubdir("brand", 0)).toBe("event-0");
+    expect(eventPhotoUploadSubdir("center", 0)).toBe("center-event-0");
+    const brandPath = marketingMediaObjectPath(
+      { kind: "brand", brandId: "brand-1" },
+      eventPhotoUploadSubdir("brand", 0),
+      new File(["x"], "a.jpg", { type: "image/jpeg" })
+    );
+    const centerPath = marketingMediaObjectPath(
+      { kind: "brand", brandId: "brand-1" },
+      eventPhotoUploadSubdir("center", 0),
+      new File(["x"], "b.jpg", { type: "image/jpeg" })
+    );
+    expect(brandPath).toBe("brand-1/marketing/event-0/asset.jpg");
+    expect(centerPath).toBe("brand-1/marketing/center-event-0/asset.jpg");
     expect(brandPath).not.toBe(centerPath);
   });
 });

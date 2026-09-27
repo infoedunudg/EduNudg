@@ -404,6 +404,7 @@ export function mergeSparkAcademyCenterLandingConfig(
       cards: partial?.trustMedia?.cards ?? sparkBase.trustMedia!.cards,
     },
     founders: limitSparkThemeDefaultMentors(partial?.founders) ?? sparkBase.founders,
+    upcomingEvents: partial?.upcomingEvents ?? centerBase.upcomingEvents,
     gallery: { ...sparkBase.gallery!, ...partial?.gallery, images: partial?.gallery?.images ?? sparkBase.gallery!.images },
     footerCta: { ...centerBase.footerCta, ...partial?.footerCta },
     footer: {
@@ -544,6 +545,7 @@ export function mergeAbacusClassicCenterLandingConfig(
       subtitle: partial?.testimonials?.subtitle ?? centerBase.testimonials.subtitle,
     },
     faq: partial?.faq ?? centerBase.faq,
+    upcomingEvents: partial?.upcomingEvents ?? abacusBase.upcomingEvents,
     footer: {
       ...abacusBase.footer,
       ...partial?.footer,

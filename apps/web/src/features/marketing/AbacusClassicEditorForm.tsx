@@ -434,6 +434,7 @@ export function AbacusClassicEditorForm({
           commit={commit}
           commitMedia={commitMedia}
           uploadScope={uploadScope}
+          portalMode={portalMode}
         />
       </EditorAccordion>
 

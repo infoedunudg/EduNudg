@@ -184,6 +184,10 @@ export function mergeSectionVisibility(
   return { ...themeDefaults, ...normalized };
 }
 
+function hasUpcomingEventsMarker(partial?: Partial<HomepageConfig>): boolean {
+  return (partial?.upcomingEvents?.items?.length ?? 0) > 0;
+}
+
 /** True when stored landing JSON includes Abacus Classic editor fields (not Novu-only). */
 export function hasAbacusClassicLandingMarkers(partial?: Partial<HomepageConfig>): boolean {
   if (!partial) return false;
@@ -191,7 +195,8 @@ export function hasAbacusClassicLandingMarkers(partial?: Partial<HomepageConfig>
     (partial.founders?.length ?? 0) > 0 ||
     partial.trustMedia?.eyebrow ||
     (partial.gallery?.images?.length ?? 0) > 0 ||
-    partial.programsSection?.cards?.some((card) => card.name.trim().length > 0)
+    partial.programsSection?.cards?.some((card) => card.name.trim().length > 0) ||
+    hasUpcomingEventsMarker(partial)
   );
 }
 
@@ -202,7 +207,8 @@ export function hasSparkAcademyLandingMarkers(partial?: Partial<HomepageConfig>)
     partial.featuresShowcase?.title ||
     partial.trustMedia?.highlightPrimary ||
     (partial.founders?.length ?? 0) > 0 ||
-    partial.programsSection?.cards?.some((card) => card.name.trim().length > 0)
+    partial.programsSection?.cards?.some((card) => card.name.trim().length > 0) ||
+    hasUpcomingEventsMarker(partial)
   );
 }
 

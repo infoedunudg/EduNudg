@@ -37,6 +37,15 @@ export function mentorPhotoUploadSubdir(
   return portalMode === "center" ? `center-founder-${slot}` : `founder-${slot}`;
 }
 
+/** Storage folder for upcoming-event covers — brand Homepage and Center Site must not share a slot. */
+export function eventPhotoUploadSubdir(
+  portalMode: "brand" | "center" | "platform" | "learn" | string,
+  index: number
+): string {
+  const slot = Math.max(0, Math.floor(index));
+  return portalMode === "center" ? `center-event-${slot}` : `event-${slot}`;
+}
+
 /** Draft slot while adding a course, before `programs.id` exists. */
 export function newCurriculumProgramMediaSlotId(): string {
   return crypto.randomUUID();

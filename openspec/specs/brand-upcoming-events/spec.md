@@ -13,6 +13,21 @@ WHEN they enable **Upcoming events** and add event cards (type, title, start dat
 THEN the config is saved in `brand_settings.settings.landing.upcomingEvents`
 AND the public brand homepage renders `#events` with date-badge cards
 
+### Center Site Configuration on franchise websites
+
+GIVEN a brand admin opens **Center Site Configuration** (`/app/center-site`)
+WHEN they enable **Upcoming events** and upload a cover image for an event
+THEN the config is saved in `brand_settings.settings.center_landing.upcomingEvents`
+AND franchise/center public sites (from `get_center_landing_public`) render `#events` with that cover image
+AND Spark / Abacus / EduLearn center merges preserve `upcomingEvents` (including `imageUrl`) from the stored partial
+
+### Separate Storage slots for Homepage vs Center Site covers
+
+GIVEN Homepage and Center Site both have an event at index 0
+WHEN staff upload cover images in each editor
+THEN Homepage uses `brand-assets` folder `event-0` and Center Site uses `center-event-0`
+AND uploading on Center Site does not replace the Homepage event file (and vice versa)
+
 ### Upcoming-only visibility
 
 GIVEN events with past and future dates

@@ -401,6 +401,7 @@ export function mergeAbacusClassicLandingConfig(
       cards: partial?.trustMedia?.cards ?? base.trustMedia!.cards,
     },
     founders: limitSparkThemeDefaultMentors(partial?.founders) ?? base.founders,
+    upcomingEvents: partial?.upcomingEvents ?? base.upcomingEvents,
     gallery: { ...base.gallery!, ...partial?.gallery, images: partial?.gallery?.images ?? base.gallery!.images },
     programsSection: {
       ...base.programsSection!,
@@ -689,6 +690,7 @@ export function mergeSparkAcademyLandingConfig(
       cards: partial?.trustMedia?.cards ?? base.trustMedia!.cards,
     },
     founders: limitSparkThemeDefaultMentors(partial?.founders) ?? base.founders,
+    upcomingEvents: partial?.upcomingEvents ?? base.upcomingEvents,
     gallery: { ...base.gallery!, ...partial?.gallery, images: partial?.gallery?.images ?? base.gallery!.images },
     footerCta: { ...base.footerCta!, ...partial?.footerCta },
     footer: {
