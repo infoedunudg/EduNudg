@@ -227,7 +227,10 @@ Brand `/app/homepage` and `/app/center-site` photo uploads SHALL be required for
 - **THEN** the first photo field is marked required
 - **AND** later photos in that section are optional
 - **AND** save is blocked until each required photo has a URL
+- **AND** the save error names the editor section (e.g. `Why us (feature blocks) → Features image`) so staff know which accordion to open
+- **AND** save focuses the first missing section accordion
 - **AND** a filled homepage Hero photo does not produce an About Us **Hero banner image** save error
+- **AND** regression `regression_required_photo_error_names_editor_section` stays green
 
 ### Requirement: Unsaved homepage edits ask to save
 
@@ -241,7 +244,7 @@ When Homepage Configuration or Center Site Configuration has unsaved edits, navi
 
 ### Requirement: Homepage editor Save stays available
 
-Brand `/app/homepage`, `/app/center-site`, and platform `/admin/homepage` **Save changes** SHALL stay clickable when the form is clean. Discard SHALL appear only when there are unsaved edits. **Save changes** SHALL disable only while a save is in flight.
+Brand `/app/homepage`, `/app/center-site`, and platform `/admin/homepage` **Save changes** SHALL stay clickable when the form is clean. Discard SHALL appear only when there are unsaved edits. **Save changes** SHALL disable only while a save is in flight. The save-bar status SHALL say **You have unsaved changes.** when dirty, **Saved.** briefly after a successful save, and **No unsaved changes.** when clean — never “draft” for save state.
 
 #### Scenario: Clean homepage editor can still save
 
@@ -249,6 +252,15 @@ Brand `/app/homepage`, `/app/center-site`, and platform `/admin/homepage` **Save
 - **WHEN** they click **Save changes**
 - **THEN** the save action runs
 - **AND** the button is not disabled because the form is clean
+
+#### Scenario: Save bar status is clear about unsaved vs saved
+
+- **GIVEN** a brand owner on Homepage Configuration
+- **WHEN** the form has unsaved edits
+- **THEN** the save bar shows **You have unsaved changes.**
+- **AND** after a successful save it shows **Saved.** (not “All changes saved.” / “draft”)
+- **AND** when clean again it shows **No unsaved changes.**
+- **AND** regression `regression_homepage_save_bar_status_avoids_draft_wording` stays green
 
 ### Requirement: Navigation CTA labels are draft until Save
 

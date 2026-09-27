@@ -13,9 +13,30 @@ import type { HomepageConfig, MarketingTheme } from "@/types/homepage";
 export type RequiredMarketingPhoto = {
   key: string;
   sectionId: string;
+  /** Editor accordion / panel title so staff know where to open. */
+  sectionTitle: string;
   label: string;
   filled: boolean;
 };
+
+/** Display titles aligned with Brand Homepage / Center Site accordion labels. */
+export const MARKETING_EDITOR_SECTION_TITLES: Record<string, string> = {
+  site: "Site",
+  hero: "Hero",
+  featureGrid: "Why us (feature blocks)",
+  founders: "Mentors / Leadership",
+  upcomingEvents: "Upcoming events",
+  about: "About Us",
+  trustMedia: "Trust & video",
+  gallery: "Photo gallery",
+  highlights: "Highlight cards (horizontal scroller)",
+  privacyFooter: "Privacy & Footer",
+  featureScroll: "Feature sections (phone blocks)",
+};
+
+function sectionTitle(sectionId: string): string {
+  return MARKETING_EDITOR_SECTION_TITLES[sectionId] ?? sectionId;
+}
 
 function hasMediaUrl(value?: string | null): boolean {
   return Boolean(value?.trim());
@@ -43,6 +64,7 @@ export function listRequiredMarketingPhotos(input: {
     {
       key: "site-logo",
       sectionId: "site",
+      sectionTitle: sectionTitle("site"),
       label: "Site logo",
       filled: hasMediaUrl(config.meta.logoUrl),
     },
@@ -52,6 +74,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "hero",
       sectionId: "hero",
+      sectionTitle: sectionTitle("hero"),
       label: alternate ? "Hero background" : "Hero background image or video",
       filled: hasMediaUrl(config.hero.backgroundImageUrl),
     });
@@ -61,6 +84,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "features-image",
       sectionId: "featureGrid",
+      sectionTitle: sectionTitle("featureGrid"),
       label: "Features image",
       filled: hasMediaUrl(config.featuresShowcase?.imageUrl),
     });
@@ -70,6 +94,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "founder-0",
       sectionId: "founders",
+      sectionTitle: sectionTitle("founders"),
       label: "Photo",
       filled: hasMediaUrl(config.founders?.[0]?.photoUrl),
     });
@@ -79,6 +104,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "event-0",
       sectionId: "upcomingEvents",
+      sectionTitle: sectionTitle("upcomingEvents"),
       label: "Cover image",
       filled: hasMediaUrl(config.upcomingEvents?.items?.[0]?.imageUrl),
     });
@@ -92,6 +118,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "about-hero",
       sectionId: "about",
+      sectionTitle: sectionTitle("about"),
       label: "About Us hero banner image",
       filled: hasMediaUrl(config.about?.heroImageUrl),
     });
@@ -101,6 +128,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "journey",
       sectionId: "trustMedia",
+      sectionTitle: sectionTitle("trustMedia"),
       label: "Journey highlight image",
       filled: hasMediaUrl(config.trustMedia?.imageUrl),
     });
@@ -110,6 +138,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "gallery-0",
       sectionId: "gallery",
+      sectionTitle: sectionTitle("gallery"),
       label: "Image",
       filled: hasMediaUrl(config.gallery?.images?.[0]?.url),
     });
@@ -120,6 +149,7 @@ export function listRequiredMarketingPhotos(input: {
       photos.push({
         key: "showcase-0",
         sectionId: "highlights",
+        sectionTitle: sectionTitle("highlights"),
         label: "Background image or video",
         filled: hasMediaUrl(config.showcaseCards[0]?.imageUrl),
       });
@@ -127,6 +157,7 @@ export function listRequiredMarketingPhotos(input: {
     photos.push({
       key: "footer-cta",
       sectionId: "privacyFooter",
+      sectionTitle: sectionTitle("privacyFooter"),
       label: "Footer CTA background image or video",
       filled: hasMediaUrl(config.footerCta?.backgroundImageUrl),
     });
@@ -143,19 +174,27 @@ export function isAboutHeroPhotoRequired(input: {
   return listRequiredMarketingPhotos(input).some((photo) => photo.key === "about-hero");
 }
 
+export function missingRequiredMarketingPhotos(input: {
+  config: HomepageConfig;
+  marketingTheme: MarketingTheme;
+  portalMode: PortalMode;
+}): RequiredMarketingPhoto[] {
+  return listRequiredMarketingPhotos(input).filter((photo) => !photo.filled);
+}
+
 export function missingRequiredMarketingPhotoLabels(input: {
   config: HomepageConfig;
   marketingTheme: MarketingTheme;
   portalMode: PortalMode;
 }): string[] {
-  return listRequiredMarketingPhotos(input)
-    .filter((photo) => !photo.filled)
-    .map((photo) => photo.label);
+  return missingRequiredMarketingPhotos(input).map((photo) => photo.label);
 }
 
-export function requiredMarketingPhotosMessage(missing: string[]): string | null {
+/** Save-bar copy: names the accordion so staff know where to upload. */
+export function requiredMarketingPhotosMessage(missing: RequiredMarketingPhoto[]): string | null {
   if (missing.length === 0) return null;
-  return `Upload a photo for: ${missing.join(", ")}.`;
+  const parts = missing.map((photo) => `${photo.sectionTitle} → ${photo.label}`);
+  return `Upload a photo in: ${parts.join("; ")}.`;
 }
 
 export function scrollMarketingEditorToBottom(): void {
@@ -164,4 +203,19 @@ export function scrollMarketingEditorToBottom(): void {
   document
     .querySelector<HTMLElement>("[aria-label='Save changes']")
     ?.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+/** Open the matching editor accordion (if collapsed) and scroll it into view. */
+export function focusMarketingEditorSection(sectionId: string): void {
+  const el = document.querySelector<HTMLElement>(`[data-editor-section="${sectionId}"]`);
+  if (!el) {
+    scrollMarketingEditorToBottom();
+    return;
+  }
+  const trigger = el.querySelector<HTMLButtonElement>(":scope > .ed-editor-accordion__trigger");
+  if (trigger) {
+    trigger.click();
+    return;
+  }
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
 }

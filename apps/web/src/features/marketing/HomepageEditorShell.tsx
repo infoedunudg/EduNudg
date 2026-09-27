@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { Button, EditorPageHeader, EditorSaveBar, EditorSectionCard, FormGrid, Input, Select, Toggle } from "@edunudg/ui";
+import { Button, EditorPageHeader, EditorSaveBar, EditorSectionCard, FormGrid, Input, MutationError, Select, Toggle } from "@edunudg/ui";
 import type { MarketingTheme } from "@/types/homepage";
 import type { PortalMode } from "@/lib/portalMode";
 import type { HomepageSectionVisibility } from "@/lib/homepageSections";
@@ -302,11 +302,7 @@ export function HomepageEditorPanel({
           </div>
           <div id={bodyId} className="ed-editor-accordion__body ed-homepage-editor-panel__body">
             {children}
-            {saveError ? (
-              <p className="ed-text-sm ed-homepage-editor-save-error" role="alert">
-                {saveError}
-              </p>
-            ) : null}
+            <MutationError message={saveError} />
             <EditorSaveBar
               isDirty={isDirty}
               onDiscard={onDiscard}
@@ -335,14 +331,16 @@ export function EditorStaticSection({ sectionId, title, headerAction, children }
   const meta = HOMEPAGE_EDITOR_SECTION_META[sectionId];
   const tone = meta?.tone === "error" ? "neutral" : (meta?.tone ?? "primary");
   return (
-    <EditorSectionCard
-      icon={sectionIcon(sectionId, true)}
-      iconTone={tone as "primary" | "secondary" | "tertiary" | "neutral"}
-      title={title ?? sectionId}
-      headerAction={headerAction}
-    >
-      {children}
-    </EditorSectionCard>
+    <div data-editor-section={sectionId}>
+      <EditorSectionCard
+        icon={sectionIcon(sectionId, true)}
+        iconTone={tone as "primary" | "secondary" | "tertiary" | "neutral"}
+        title={title ?? sectionId}
+        headerAction={headerAction}
+      >
+        {children}
+      </EditorSectionCard>
+    </div>
   );
 }
 
@@ -580,6 +578,7 @@ export function EditorAccordion({
   return (
     <section
       ref={sectionRef}
+      data-editor-section={sectionId}
       className={[
         "ed-editor-accordion",
         isOpen ? "ed-editor-accordion--open" : "",

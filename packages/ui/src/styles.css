@@ -6342,6 +6342,11 @@ body.ed-nav-open {
   color: var(--ed-on-surface-variant);
 }
 
+.ed-editor-save-bar__status--ok {
+  color: var(--ed-success, #15803d);
+  font-weight: 600;
+}
+
 .ed-editor-save-bar__actions {
   display: flex;
   flex-wrap: wrap;

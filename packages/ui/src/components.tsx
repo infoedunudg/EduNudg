@@ -1003,8 +1003,9 @@ export function EditorSectionCard({
 
 /** Sticky draft/save bar for homepage and marketing editors. */
 export function EditorSaveBar({
-  draftNote = "Changes are currently in draft.",
-  savedNote = "All changes saved.",
+  draftNote = "You have unsaved changes.",
+  savedNote = "No unsaved changes.",
+  justSavedNote = "Saved.",
   isDirty = false,
   onDiscard,
   onSave,
@@ -1014,8 +1015,12 @@ export function EditorSaveBar({
   discardLabel = "Discard",
   inline = false,
 }: {
+  /** Shown while the form has unsaved edits (prefer this over “draft” wording). */
   draftNote?: string;
+  /** Shown when the form is clean and nothing just finished saving. */
   savedNote?: string;
+  /** Shown briefly after a successful save (`saved` flash). */
+  justSavedNote?: string;
   isDirty?: boolean;
   onDiscard?: () => void;
   onSave: () => void;
@@ -1026,6 +1031,20 @@ export function EditorSaveBar({
   /** When true, bar flows at the end of a panel instead of fixed to the viewport. */
   inline?: boolean;
 }) {
+  const status = savePending
+    ? "Saving…"
+    : isDirty
+      ? draftNote
+      : saved
+        ? justSavedNote
+        : savedNote;
+  const statusClass = [
+    "ed-editor-save-bar__status",
+    !isDirty && saved && !savePending ? "ed-editor-save-bar__status--ok" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
       className={["ed-editor-save-bar", inline ? "ed-editor-save-bar--inline" : ""].filter(Boolean).join(" ")}
@@ -1033,7 +1052,9 @@ export function EditorSaveBar({
       aria-label="Save changes"
     >
       <div className="ed-editor-save-bar__inner">
-        <p className="ed-editor-save-bar__status">{isDirty ? draftNote : savedNote}</p>
+        <p className={statusClass} aria-live="polite">
+          {status}
+        </p>
         <div className="ed-editor-save-bar__actions">
           {onDiscard && isDirty ? (
             <Button variant="secondary" onClick={onDiscard} disabled={savePending}>
