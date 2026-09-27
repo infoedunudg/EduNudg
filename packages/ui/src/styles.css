@@ -7116,6 +7116,33 @@ body.ed-nav-open {
   background: color-mix(in srgb, var(--ed-primary-soft) 55%, var(--ed-card));
 }
 
+.ed-mutation-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--ed-radius-lg, 10px);
+  border: 1px solid color-mix(in srgb, var(--ed-danger) 35%, var(--ed-border));
+  background: var(--ed-danger-bg, #fee2e2);
+  color: var(--ed-danger, #dc2626);
+}
+
+.ed-mutation-error__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  margin-top: 0.1rem;
+}
+
+.ed-mutation-error__message {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: inherit;
+}
+
 .ed-commerce-alert__icon {
   flex-shrink: 0;
   color: var(--ed-primary);

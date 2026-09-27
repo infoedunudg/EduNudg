@@ -377,9 +377,16 @@ export function Select<T extends string>({
 export function MutationError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p className="ed-text-sm" role="alert" style={{ color: "var(--ed-danger, #b91c1c)" }}>
-      {message}
-    </p>
+    <div className="ed-mutation-error" role="alert">
+      <span className="ed-mutation-error__icon" aria-hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v5" />
+          <path d="M12 16h.01" />
+        </svg>
+      </span>
+      <p className="ed-mutation-error__message">{message}</p>
+    </div>
   );
 }
 

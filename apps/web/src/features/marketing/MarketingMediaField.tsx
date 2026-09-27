@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import { Button } from "@edunudg/ui";
+import { Button, MutationError } from "@edunudg/ui";
 import {
   uploadMarketingMedia,
   type MarketingUploadScope,
@@ -42,8 +42,13 @@ type Props = {
   recommendedSize?: string;
   /** Called after a successful upload with the new public URL (e.g. auto-save config). */
   onUploaded?: (url: string) => void | Promise<void>;
+  /** Bubble upload failures (e.g. when this field is visually hidden behind a dropzone). */
+  onError?: (message: string | null) => void;
+  onPendingChange?: (pending: boolean) => void;
   /** First photo in a homepage / center-site section. */
   required?: boolean;
+  /** When false, skip in-field MutationError (parent shows it). Default true. */
+  showInlineError?: boolean;
 };
 
 function MediaFieldLabel({
@@ -88,7 +93,10 @@ export function MarketingMediaField({
   layout = "default",
   recommendedSize,
   onUploaded,
+  onError,
+  onPendingChange,
   required = false,
+  showInlineError = true,
 }: Props) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -96,21 +104,33 @@ export function MarketingMediaField({
   const [error, setError] = useState<string | null>(null);
   const showVideoPreview = mediaType === "video" || isVideoMediaUrl(value);
 
+  const reportError = (message: string | null) => {
+    setError(message);
+    onError?.(message);
+  };
+
+  const setUploadPending = (next: boolean) => {
+    setPending(next);
+    onPendingChange?.(next);
+  };
+
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
-    setError(null);
-    setPending(true);
+    reportError(null);
+    setUploadPending(true);
     try {
       const url = await uploadMarketingMedia(uploadScope, uploadSubdir, file);
       onChange(url);
       await onUploaded?.(url);
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      reportError(err instanceof Error ? err.message : "Upload failed");
     } finally {
-      setPending(false);
+      setUploadPending(false);
     }
   };
+
+  const inlineError = showInlineError ? <MutationError message={error} /> : null;
 
   const fileInput = (
     <input
@@ -166,11 +186,7 @@ export function MarketingMediaField({
         </div>
         {pending ? <p className="ed-text-sm ed-muted">Uploading…</p> : null}
         {requiredHint}
-        {error ? (
-          <p className="ed-text-sm" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {inlineError}
       </div>
     );
   }
@@ -221,11 +237,7 @@ export function MarketingMediaField({
         </div>
         {pending ? <p className="ed-text-sm ed-muted">Uploading…</p> : null}
         {requiredHint}
-        {error ? (
-          <p className="ed-text-sm" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {inlineError}
       </div>
     );
   }
@@ -269,11 +281,7 @@ export function MarketingMediaField({
       </div>
       {pending ? <p className="ed-text-sm ed-muted">Uploading…</p> : null}
       {requiredHint}
-      {error ? (
-        <p className="ed-text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {inlineError}
     </div>
   );
 }

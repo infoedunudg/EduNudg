@@ -92,6 +92,7 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
   const [originalLoginEmail, setOriginalLoginEmail] = useState<string | null>(null);
   const [credentialsLoaded, setCredentialsLoaded] = useState(false);
   const [loginFieldsTouched, setLoginFieldsTouched] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const deleteDialogRef = useRef<HTMLDialogElement>(null);
 
@@ -139,12 +140,15 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
   }, [deleteMode]);
 
   useEffect(() => {
-    if (!error) return;
+    const panelError = error || photoError;
+    if (!panelError) return;
     const frame = requestAnimationFrame(() => {
-      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
     return () => cancelAnimationFrame(frame);
-  }, [error]);
+  }, [error, photoError]);
+
+  const panelError = error || photoError;
 
   const stats = useQuery({
     queryKey: ["brand-center-stats", center.id],
@@ -188,6 +192,7 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
   const saveProfile = useMutation({
     mutationFn: async () => {
       clear();
+      setPhotoError(null);
       const shouldSyncCredentials = shouldSyncCenterOwnerCredentials({
         loginEmail,
         password,
@@ -343,17 +348,17 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
         <CenterDetailStatsRow items={centerStatsItems(stats.data, centerBackendUrl)} />
       ) : null}
 
-      <div ref={errorRef}>
-        <MutationError message={error} />
-      </div>
-
       {!isMobile ? null : (
         <div className="ed-brand-centers__mobile-photo">
           <CenterPhotoUpload
             brandId={brandId}
             centerId={center.id}
             currentPhotoUrl={form.photoUrl}
-            onUploaded={(url) => setField("photoUrl", url)}
+            onUploaded={(url) => {
+              setPhotoError(null);
+              setField("photoUrl", url);
+            }}
+            onError={setPhotoError}
             disabled={saveProfile.isPending}
           />
         </div>
@@ -365,7 +370,11 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
             brandId={brandId}
             centerId={center.id}
             currentPhotoUrl={form.photoUrl}
-            onUploaded={(url) => setField("photoUrl", url)}
+            onUploaded={(url) => {
+              setPhotoError(null);
+              setField("photoUrl", url);
+            }}
+            onError={setPhotoError}
             disabled={saveProfile.isPending}
           />
         ) : null}
@@ -526,7 +535,10 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
       </dialog>
 
       {isMobile ? (
-        <div className="ed-brand-centers__mobile-actions">
+        <div className="ed-brand-centers__sticky-actions ed-brand-centers__sticky-actions--mobile">
+          <div ref={errorRef} className="ed-brand-centers__save-error">
+            <MutationError message={panelError} />
+          </div>
           <SaveButton
             onClick={() => saveProfile.mutate()}
             disabled={!form.name.trim() || saveProfile.isPending || !isDirty}
@@ -549,38 +561,43 @@ export function CenterDetailPanel({ center, brandId, brandSlug, isMobile, onStat
           </Button>
         </div>
       ) : (
-        <CenterDetailFooter
-          suspendAction={
-            center.status === "active" ? (
-              <Button variant="danger" onClick={() => setSuspendMode(true)}>
-                Disable franchise
+        <div className="ed-brand-centers__sticky-actions" data-testid="franchise-sticky-save">
+          <div ref={errorRef} className="ed-brand-centers__save-error">
+            <MutationError message={panelError} />
+          </div>
+          <CenterDetailFooter
+            suspendAction={
+              center.status === "active" ? (
+                <Button variant="danger" onClick={() => setSuspendMode(true)}>
+                  Disable franchise
+                </Button>
+              ) : (
+                <Button onClick={() => reEnable.mutate()} disabled={reEnable.isPending}>
+                  {reEnable.isPending ? "Enabling…" : "Enable franchise"}
+                </Button>
+              )
+            }
+            deleteAction={
+              <Button variant="secondary" onClick={() => setDeleteMode(true)}>
+                Delete franchise
               </Button>
-            ) : (
-              <Button onClick={() => reEnable.mutate()} disabled={reEnable.isPending}>
-                {reEnable.isPending ? "Enabling…" : "Enable franchise"}
+            }
+            resetAction={
+              <Button variant="ghost" onClick={resetForm} disabled={!isDirty}>
+                Reset Changes
               </Button>
-            )
-          }
-          deleteAction={
-            <Button variant="secondary" onClick={() => setDeleteMode(true)}>
-              Delete franchise
-            </Button>
-          }
-          resetAction={
-            <Button variant="ghost" onClick={resetForm} disabled={!isDirty}>
-              Reset Changes
-            </Button>
-          }
-          saveAction={
-            <SaveButton
-              onClick={() => saveProfile.mutate()}
-              disabled={!form.name.trim() || saveProfile.isPending || !isDirty}
-              pending={saveProfile.isPending}
-              saved={profileSaved.saved}
-              label="Save Changes"
-            />
-          }
-        />
+            }
+            saveAction={
+              <SaveButton
+                onClick={() => saveProfile.mutate()}
+                disabled={!form.name.trim() || saveProfile.isPending || !isDirty}
+                pending={saveProfile.isPending}
+                saved={profileSaved.saved}
+                label="Save Changes"
+              />
+            }
+          />
+        </div>
       )}
     </div>
   );

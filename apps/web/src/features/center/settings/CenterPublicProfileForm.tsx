@@ -59,6 +59,7 @@ export function CenterPublicProfileForm({ brandId, centerId, profile }: Props) {
   const { error, clear, capture } = useMutationError();
   const [form, setForm] = useState(() => profileToForm(profile));
   const [savedFlash, setSavedFlash] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   useEffect(() => {
     setForm(profileToForm(profile));
@@ -67,6 +68,7 @@ export function CenterPublicProfileForm({ brandId, centerId, profile }: Props) {
   const save = useMutation({
     mutationFn: async () => {
       clear();
+      setPhotoError(null);
       const { phoneNational, ...payload } = form;
       await updateCenterPublicProfile(centerId, {
         ...payload,
@@ -111,7 +113,6 @@ export function CenterPublicProfileForm({ brandId, centerId, profile }: Props) {
   return (
     <SettingsSection title="Public Center Profile" mobileLabel="Public profile" className="ed-settings-section--profile">
       <SettingsProfileBanner initials={bannerInitials} title={bannerTitle} />
-      <MutationError message={error} />
 
       <SettingsSubsection label="Public profile" cardOnMobile>
         <div className="ed-center-settings-page__mobile-photo">
@@ -119,7 +120,11 @@ export function CenterPublicProfileForm({ brandId, centerId, profile }: Props) {
             brandId={brandId}
             centerId={centerId}
             currentPhotoUrl={form.photoUrl}
-            onUploaded={(url) => setField("photoUrl", url)}
+            onUploaded={(url) => {
+              setPhotoError(null);
+              setField("photoUrl", url);
+            }}
+            onError={setPhotoError}
             disabled={save.isPending}
             variant="mobile"
           />
@@ -164,6 +169,7 @@ export function CenterPublicProfileForm({ brandId, centerId, profile }: Props) {
         {mapsUrl ? <SettingsMapsButton href={mapsUrl} /> : null}
       </SettingsSubsection>
 
+      <MutationError message={error || photoError} />
       <SettingsFormFooter hint={lastEdited ?? undefined}>
         <Button variant="ghost" onClick={resetForm} disabled={save.isPending}>
           Cancel

@@ -1,6 +1,7 @@
 import { getSupabase } from "@/lib/supabase";
 import { withLogoCacheBust } from "@/lib/brandLogoCache";
 import { BRAND_ASSETS_BUCKET } from "@/lib/brandLogoStorage";
+import { assertMarketingImageUploadSize } from "@/lib/marketingMediaStorage";
 
 const PHOTO_FILE_PREFIX = "photo.";
 
@@ -50,6 +51,7 @@ export async function removeExistingCenterPhotos(brandId: string, centerId: stri
 
 /** Uploads center photo to brand-assets and returns cache-busted public URL. */
 export async function uploadCenterPhoto(brandId: string, centerId: string, file: File): Promise<string> {
+  assertMarketingImageUploadSize(file);
   const ext = imageExtension(file);
   await removeExistingCenterPhotos(brandId, centerId);
 

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Button } from "@edunudg/ui";
+import { Button, MutationError } from "@edunudg/ui";
 import {
   activeMerchandisePhotoUrls,
   clearMerchandiseProductPhoto,
@@ -151,11 +151,7 @@ export function MerchandiseProductPhotos({
             );
           })}
         </div>
-        {localError ? (
-          <p className="ed-text-sm" role="alert">
-            {localError}
-          </p>
-        ) : null}
+        {localError ? <MutationError message={localError} /> : null}
         <button type="button" hidden data-testid="manage-gallery-trigger" onClick={focusFirstEmptySlot}>
           Manage gallery
         </button>
@@ -203,11 +199,7 @@ export function MerchandiseProductPhotos({
           );
         })}
       </div>
-      {localError ? (
-        <p className="ed-text-sm" role="alert">
-          {localError}
-        </p>
-      ) : null}
+      <MutationError message={localError} />
     </div>
   );
 }

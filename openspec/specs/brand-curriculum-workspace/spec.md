@@ -77,6 +77,8 @@ Brand staff SHALL see allowed formats, maximum file size, and recommended dimens
 - **WHEN** brand staff open a course on `/app/curriculum`
 - **THEN** Course Banner (Thumbnail) shows PNG/JPEG/WebP/GIF, maximum 5 MB, and recommended 1280×720 (16:9)
 - **AND** uploads larger than 5 MB are rejected before storage
+- **AND** the rejection shows a highlighted danger card under the banner (not silent), even when the file picker is hidden behind **Replace image**
+- **AND** regressions `regression_marketing_media_bubbles_oversized_error_to_parent` and `regression_curriculum_banner_oversized_error_shows_under_dropzone` stay green
 
 #### Scenario: Each course banner uses its own storage slot
 

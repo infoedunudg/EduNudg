@@ -39,6 +39,20 @@ Brand staff SHALL edit franchise details except slug.
 - **AND** Franchise Identity labels **Franchise Owner** (`name`) and **Display Name** (`display_name`)
 - **AND** Location & Contact labels **State** for `region`
 
+#### Scenario: Save stays visible while scrolling
+
+- **WHEN** brand staff scroll the franchise detail panel upward through a long form
+- **THEN** **Save Changes** (and nearby lifecycle actions) remain in a sticky bottom action bar
+- **AND** photo/size errors next to Save stay in that same sticky region
+- **AND** regression `regression_franchise_save_actions_stay_sticky_while_scrolling` stays green
+
+#### Scenario: Oversized franchise photo error near Save
+
+- **WHEN** brand staff upload a franchise photo larger than 5 MB
+- **THEN** the client rejects the upload before Storage with a clear size message
+- **AND** the error appears next to **Save Changes** in a highlighted danger card (`ed-mutation-error`), not plain black text
+- **AND** regressions `regression_center_photo_rejects_images_over_5mb`, `regression_franchise_photo_error_shows_near_save_via_onError`, `regression_franchise_photo_error_shows_near_save_button`, and `regression_mutation_error_uses_highlighted_danger_card` stay green
+
 ### Requirement: Franchise Management has no social media editor
 
 Brand `/app/centers` SHALL NOT show or edit franchise social media. Profile Save SHALL pass through existing `franchise_centers.social_links` without a Social Media form. Center public footers SHALL use brand `social_connect` instead of those stored links.

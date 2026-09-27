@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   CurriculumBannerDropzone,
   CurriculumBuilderHeader,
@@ -10,6 +10,7 @@ import {
   CurriculumVideoPreview,
   FormGrid,
   Input,
+  MutationError,
   SaveButton,
   Textarea,
   Toggle,
@@ -103,6 +104,8 @@ export function CurriculumCourseDetail({
   showPageHeader = false,
 }: Props) {
   const bannerInputRef = useRef<HTMLDivElement>(null);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const [bannerUploading, setBannerUploading] = useState(false);
   const uploadScope = { kind: "brand" as const, brandId };
   const status = courseStatus(course);
   const statChips = impact ? impactStatChips(impact) : [];
@@ -216,16 +219,24 @@ export function CurriculumCourseDetail({
             <CurriculumBannerDropzone
               imageUrl={editCourse.marketingImageUrl}
               hint={curriculumBannerUploadHint()}
+              uploading={bannerUploading}
               onUploadClick={() => {
                 const input = bannerInputRef.current?.querySelector<HTMLInputElement>('input[type="file"]');
                 input?.click();
               }}
             />
+            <MutationError message={bannerError} />
             <div className="ed-curriculum-brand__hidden-media" ref={bannerInputRef}>
               <MarketingMediaField
                 label="Course Banner (Thumbnail)"
                 value={editCourse.marketingImageUrl}
-                onChange={(marketingImageUrl) => onEditCourseChange({ ...editCourse, marketingImageUrl })}
+                onChange={(marketingImageUrl) => {
+                  setBannerError(null);
+                  onEditCourseChange({ ...editCourse, marketingImageUrl });
+                }}
+                onError={setBannerError}
+                onPendingChange={setBannerUploading}
+                showInlineError={false}
                 mediaType="image"
                 uploadSubdir={curriculumProgramMediaSubdir(course.id)}
                 uploadScope={uploadScope}
